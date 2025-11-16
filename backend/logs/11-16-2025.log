@@ -1,3 +1,458 @@
 2025-11-16 10:56:32 - server - ERROR - 업로드 실패: Error 11001 connecting to redis:6379. getaddrinfo failed.
 2025-11-16 11:04:42 - server - ERROR - 업로드 실패: Error 11001 connecting to redis:6379. getaddrinfo failed.
 2025-11-16 11:12:13 - server - ERROR - 업로드 실패: Error 11001 connecting to redis:6379. getaddrinfo failed.
+2025-11-16 11:18:52 - __main__ - INFO - Starting FastAPI server...
+2025-11-16 11:19:48 - server - INFO - {'message': 'chunk 1/2 업로드 완료'}
+2025-11-16 11:19:52 - server - INFO - {'message': 'chunk 1/3 업로드 완료'}
+2025-11-16 11:19:54 - server - INFO - {'message': 'chunk 2/3 업로드 완료'}
+2025-11-16 11:46:25 - routers.upload - INFO - {'message': 'chunk 1/2 업로드 완료'}
+2025-11-16 11:46:29 - routers.upload - INFO - {'message': 'chunk 1/3 업로드 완료'}
+2025-11-16 11:46:32 - routers.upload - INFO - {'message': 'chunk 2/3 업로드 완료'}
+2025-11-16 13:19:30 - __main__ - INFO - Starting FastAPI server...
+2025-11-16 16:45:25 - __main__ - INFO - Starting FastAPI server...
+2025-11-16 16:46:08 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:46:08 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:46:38 - process.postgres - INFO - CREATE TABLE
+2025-11-16 16:46:38 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:46:38 - process.postgres - INFO - 'test_007' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 16:46:38 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 16:46:46 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:46:46 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:46:47 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:46:47 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:46:57 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:46:57 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:46:57 - process.postgres - INFO - 테이블 'test_007'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:47:02 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:47:02 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:53:14 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:53:14 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:54:03 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:54:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:54:16 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:54:16 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:54:16 - process.postgres - INFO - CREATE TABLE
+2025-11-16 16:54:16 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:54:16 - process.postgres - INFO - 't007' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 16:54:16 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 16:54:16 - routers.make_rdb - INFO - 't007' 테이블 생성 완료
+2025-11-16 16:54:28 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:54:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:54:42 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:54:42 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:54:42 - process.postgres - INFO - 테이블 't007'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:54:48 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:54:48 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:55:57 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:55:57 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:55:57 - process.postgres - INFO - CREATE TABLE
+2025-11-16 16:55:57 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:55:57 - process.postgres - INFO - 'test007' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 16:55:57 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 16:55:57 - routers.make_rdb - INFO - 'test007' 테이블 생성 완료
+2025-11-16 16:56:09 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:56:09 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:23 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:56:23 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:23 - process.postgres - INFO - 테이블 'test007'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:56:27 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:56:27 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:27 - process.postgres - INFO - 테이블 'test007aaa'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:56:28 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:56:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:28 - process.postgres - INFO - 테이블 'test007aaa'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:56:47 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:56:47 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:47 - process.postgres - INFO - CREATE TABLE
+2025-11-16 16:56:47 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:48 - process.postgres - INFO - 't007' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 16:56:48 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 16:56:48 - routers.make_rdb - INFO - 't007' 테이블 생성 완료
+2025-11-16 16:56:51 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:56:51 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:56:51 - routers.make_rdb - WARNING - 테이블 t007는 이미 존재합니다.
+2025-11-16 16:58:22 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:58:22 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:22 - routers.make_rdb - WARNING - 테이블 t007는 이미 존재합니다.
+2025-11-16 16:58:28 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:58:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:34 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:58:34 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:34 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:58:34 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:34 - process.postgres - INFO - 테이블 'test007aaa'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:58:34 - routers.make_rdb - INFO - 'test007aaa' 테이블 삭제 완료
+2025-11-16 16:58:38 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:58:38 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:38 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:58:38 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:38 - process.postgres - INFO - 테이블 'test007aaa'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:58:38 - routers.make_rdb - INFO - 'test007aaa' 테이블 삭제 완료
+2025-11-16 16:58:40 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:58:40 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:40 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:58:40 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:40 - process.postgres - INFO - 테이블 'test007aaa'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:58:40 - routers.make_rdb - INFO - 'test007aaa' 테이블 삭제 완료
+2025-11-16 16:58:41 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:58:41 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:41 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:58:41 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:58:41 - process.postgres - INFO - 테이블 'test007aaa'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:58:41 - routers.make_rdb - INFO - 'test007aaa' 테이블 삭제 완료
+2025-11-16 16:59:14 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:59:14 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:59:14 - routers.make_rdb - WARNING - 테이블 test007aaa는 존재하지 않습니다.
+2025-11-16 16:59:20 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:59:20 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:59:20 - routers.make_rdb - WARNING - 테이블 test007aaa는 존재하지 않습니다.
+2025-11-16 16:59:21 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:59:21 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:59:21 - routers.make_rdb - WARNING - 테이블 test007aaa는 존재하지 않습니다.
+2025-11-16 16:59:33 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:59:33 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:59:33 - process.postgres - INFO - DROP TABLE
+2025-11-16 16:59:33 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 16:59:33 - process.postgres - INFO - 테이블 't007'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 16:59:33 - routers.make_rdb - INFO - 't007' 테이블 삭제 완료
+2025-11-16 16:59:36 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 16:59:36 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:00:08 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:00:08 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:00:09 - process.postgres - INFO - CREATE TABLE
+2025-11-16 17:00:09 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:00:09 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 17:00:09 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 17:00:09 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 17:00:15 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:00:15 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:03:50 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:03:50 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:04:49 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:04:49 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:04:57 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:04:57 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:04:57 - routers.make_rdb - WARNING - 테이블 pjt_001는 이미 존재합니다.
+2025-11-16 17:05:53 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:05:53 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:05:53 - routers.make_rdb - WARNING - 테이블 pjt_001는 이미 존재합니다.
+2025-11-16 17:06:03 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:06:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:06:06 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:06:06 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:06:09 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:06:09 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:06:09 - routers.make_rdb - WARNING - 테이블 pjt_001는 이미 존재합니다.
+2025-11-16 17:17:15 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:17:15 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:17:28 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:17:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:17:28 - process.postgres - INFO - DROP TABLE
+2025-11-16 17:17:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:17:28 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 17:17:28 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
+2025-11-16 17:17:31 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:17:31 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:17:39 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:17:39 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:17:39 - process.postgres - INFO - CREATE TABLE
+2025-11-16 17:17:39 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:17:39 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 17:17:39 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 17:17:39 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 17:30:18 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:30:18 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:30:30 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:30:30 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:30:30 - process.postgres - ERROR - 전체 처리 중 오류 발생: 'Document' object has no attribute 'get'
+2025-11-16 17:30:30 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 17:33:53 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 17:33:53 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:35:46 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:35:46 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:35:56 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 17:35:56 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:35:56 - process.postgres - INFO - --- pjt_001 테이블 조회 결과 ---
+2025-11-16 17:35:56 - process.postgres - INFO - 컬럼: ['id', 'page_content', 'filename', 'filepath', 'hashed_filename', 'hashed_filepath', 'hashed_page_content', 'page', 'lv1_cat', 'lv2_cat', 'lv3_cat', 'lv4_cat', 'embeddings', 'created_at', 'updateed_at']
+2025-11-16 17:41:35 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:41:35 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:41:35 - process.postgres - ERROR - 전체 처리 중 오류 발생: 'Document' object has no attribute 'get'
+2025-11-16 17:41:35 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 17:41:47 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:41:47 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:41:47 - process.postgres - ERROR - 전체 처리 중 오류 발생: 'Document' object has no attribute 'get'
+2025-11-16 17:41:47 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 17:45:05 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:45:05 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:45:05 - process.postgres - ERROR - 전체 처리 중 오류 발생: column "updated_at" of relation "pjt_001" does not exist
+LINE 1: ...v2_cat, lv3_cat, lv4_cat, embeddings, created_at, updated_at...
+                                                             ^
+
+2025-11-16 17:45:05 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 17:46:03 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:46:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:03 - process.postgres - INFO - DROP TABLE
+2025-11-16 17:46:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:03 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 17:46:03 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
+2025-11-16 17:46:16 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:46:16 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:16 - process.postgres - INFO - CREATE TABLE
+2025-11-16 17:46:16 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:16 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 17:46:16 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 17:46:16 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 17:46:20 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:46:20 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:32 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:46:32 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:32 - process.postgres - INFO - DROP TABLE
+2025-11-16 17:46:32 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:32 - process.postgres - INFO - 테이블 'products'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 17:46:32 - routers.make_rdb - INFO - 'products' 테이블 삭제 완료
+2025-11-16 17:46:37 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:46:37 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:46:37 - process.postgres - ERROR - 전체 처리 중 오류 발생: null value in column "id" of relation "pjt_001" violates not-null constraint
+DETAIL:  Failing row contains (null, This page explains FWG that belongs to project01,cat_01,cat_01_0..., null, null, null, null, null, null, null, null, null, null, , 2025-11-16 08:46:37.544965+00, 2025-11-16 08:46:37.544965+00).
+
+2025-11-16 17:46:37 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 17:52:24 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:52:24 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:52:24 - process.postgres - ERROR - 전체 처리 중 오류 발생: null value in column "id" of relation "pjt_001" violates not-null constraint
+DETAIL:  Failing row contains (null, This page explains FWG that belongs to project01,cat_01,cat_01_0..., null, null, null, null, null, null, null, null, null, null, , 2025-11-16 08:52:24.59678+00, 2025-11-16 08:52:24.59678+00).
+
+2025-11-16 17:52:24 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 17:55:10 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:55:10 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:55:11 - process.postgres - INFO - DROP TABLE
+2025-11-16 17:55:11 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:55:11 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 17:55:11 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
+2025-11-16 17:55:16 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 17:55:16 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:55:16 - process.postgres - INFO - CREATE TABLE
+2025-11-16 17:55:16 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:55:16 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 17:55:16 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 17:55:16 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 17:55:24 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 17:55:24 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 17:55:24 - process.postgres - ERROR - 전체 처리 중 오류 발생: null value in column "id" of relation "pjt_001" violates not-null constraint
+DETAIL:  Failing row contains (null, This page explains FWG that belongs to project01,cat_01,cat_01_0..., null, null, null, null, null, null, null, null, null, null, , 2025-11-16 08:55:24.251437+00, 2025-11-16 08:55:24.251437+00).
+
+2025-11-16 17:55:24 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 18:03:35 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:03:35 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:03:35 - process.postgres - INFO - DROP TABLE
+2025-11-16 18:03:35 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:03:35 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 18:03:35 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
+2025-11-16 18:03:40 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:03:40 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:03:40 - process.postgres - INFO - CREATE TABLE
+2025-11-16 18:03:40 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:03:40 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 18:03:40 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 18:03:40 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 18:19:47 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:19:47 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:19:56 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:19:56 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:19:56 - process.postgres - INFO - DROP TABLE
+2025-11-16 18:19:56 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:19:56 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 18:19:56 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
+2025-11-16 18:20:59 - __main__ - INFO - Starting FastAPI server...
+2025-11-16 18:21:44 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:21:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:21:45 - process.postgres - INFO - CREATE TABLE
+2025-11-16 18:21:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:21:45 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 18:21:45 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 18:21:45 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 18:22:25 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 18:22:25 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:22:25 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 18:22:25 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:22:25 - process.postgres - INFO - --- pjt_001 테이블 조회 결과 ---
+2025-11-16 18:22:25 - process.postgres - INFO - 컬럼: ['id', 'page_content', 'filename', 'filepath', 'hashed_filename', 'hashed_filepath', 'hashed_page_content', 'page', 'lv1_cat', 'lv2_cat', 'lv3_cat', 'lv4_cat', 'embeddings', 'created_at', 'updated_at']
+2025-11-16 18:22:25 - process.postgres - INFO - ('9c534f14-b2a0-4fbe-81d4-8ac5746b3728', 'This page explains FWG that belongs to project01,cat_01,cat_01_01 categories.\n| SHIP NO.   | TECHNICAL SPECIFICATION FOR   | SHEET PAGE   |\n|------------|-------------------------------|--------------|\n| 8250/8251  | F.W. GENERATOR                | 5/5          |\n\n- 22) The surfaces having normal operating temperatures above 60 ℃ to be insulated by " Supplier", except valves and flanges, where required, for maintaining internal fluid temperature and for personal protection and at least the a preparation work(insulation stopper and/or pin) should be done by supplier before equipment delivery.\n- 23) The information of loose supply items (Yard Supply Scope) &amp; connections to be separately listed and reflected on the approval drawing.\n- 24) The deviation from yard\'s P.O.S. to be notified by the deviation list and clarified at the quotation stage. (IMPORTANT)\n4. Items not notified in the deviation list should be considered as fully satisfied with this technical specification.\n\nEven in case there is no deviation, such a term as \'no deviation\' should be stated in the deviation list. (IMPORTANT)\n\n- 25) Any necessitate modification and/or changes from the submitted specifications and/or official performance data released at the time being, MUST be informed separately and agreed by YARD prior to application. (IMPORTANT)\n- 26) For the explosion proof equipment installed in hazardous area, item list of explosion proof electric component (such as sensor, motor) and specific general arrangement drawing including location of the component and copy or picture of Certificate No./Classification to be submitted prior to FAT.\n- 27) Cable way to be provided on equipment body or additional cable tray to be provided for each yard cable connection. And standardized cable way/tray should be indicated and represented clearly on approval drawing.\n- 28) All cable glands to be marine use type and maker\'s standard. Maker shall be responsible for provision/installation of suitable size of cable gland with gapless inner packing so that it can hold cable tightly and ensure intended quality and performance. In case of non-metallic gland application, it should be made of approved corrosion/oil resistant materials and non-hazardous material including flame retardant characteristic. Strength and hardness shall be similar to metallic gland and it shall be capable of withstanding ship\'s vibration and UV light(ultra violet) by such as anti-UV coating or equivalent. Unused cable glands to be blocked by blind plug to satisfy IP grade &amp; explosion proof.\n- 29) Enclosure and protection type for electric equipment to be applied as follows unless specified elsewhere in the POS.\n6. -Drip-proof type (IP 20): Inside control room and accommodation\n7. -Drip-proof type (IP 22): Inside engine room (above floor) and other enclosed machinery space\n8. -Splash-proof type (IP 44): Inside engine room (below floor), steering gear, fire control station, purifier space, galley and laundry, bosun store.\n9. -Waterr-p -proof type (IP 56): Weather exposed space\n\n/HHIPN301584/2024-01-25 PM 06:28:29(7/7)\n\n자재구매부/이택용', 'FWG.pdf', 'D:/auto_vectordb/backend/uploaded/project01/cat_01/cat_01_01/FWG.pdf', 'bae0b5904782ab6893ab0a1c778c050b', '1205926e33cfc5d9ae81dde93f6c2dcd', '8ef194de6f50dfeedd5db971b4d0bfc1', '6', 'project01', 'cat_01', 'cat_01_01', '', '', datetime.datetime(2025, 11, 16, 18, 22, 25, 851762, tzinfo=datetime.timezone.utc), datetime.datetime(2025, 11, 16, 18, 22, 25, 851762, tzinfo=datetime.timezone.utc))
+2025-11-16 18:22:25 - process.postgres - INFO - 데이티 입력 성공 -[('9c534f14-b2a0-4fbe-81d4-8ac5746b3728', 'This page explains FWG that belongs to project01,cat_01,cat_01_01 categories.\n| SHIP NO.   | TECHNICAL SPECIFICATION FOR   | SHEET PAGE   |\n|------------|-------------------------------|--------------|\n| 8250/8251  | F.W. GENERATOR                | 5/5          |\n\n- 22) The surfaces having normal operating temperatures above 60 ℃ to be insulated by " Supplier", except valves and flanges, where required, for maintaining internal fluid temperature and for personal protection and at least the a preparation work(insulation stopper and/or pin) should be done by supplier before equipment delivery.\n- 23) The information of loose supply items (Yard Supply Scope) &amp; connections to be separately listed and reflected on the approval drawing.\n- 24) The deviation from yard\'s P.O.S. to be notified by the deviation list and clarified at the quotation stage. (IMPORTANT)\n4. Items not notified in the deviation list should be considered as fully satisfied with this technical specification.\n\nEven in case there is no deviation, such a term as \'no deviation\' should be stated in the deviation list. (IMPORTANT)\n\n- 25) Any necessitate modification and/or changes from the submitted specifications and/or official performance data released at the time being, MUST be informed separately and agreed by YARD prior to application. (IMPORTANT)\n- 26) For the explosion proof equipment installed in hazardous area, item list of explosion proof electric component (such as sensor, motor) and specific general arrangement drawing including location of the component and copy or picture of Certificate No./Classification to be submitted prior to FAT.\n- 27) Cable way to be provided on equipment body or additional cable tray to be provided for each yard cable connection. And standardized cable way/tray should be indicated and represented clearly on approval drawing.\n- 28) All cable glands to be marine use type and maker\'s standard. Maker shall be responsible for provision/installation of suitable size of cable gland with gapless inner packing so that it can hold cable tightly and ensure intended quality and performance. In case of non-metallic gland application, it should be made of approved corrosion/oil resistant materials and non-hazardous material including flame retardant characteristic. Strength and hardness shall be similar to metallic gland and it shall be capable of withstanding ship\'s vibration and UV light(ultra violet) by such as anti-UV coating or equivalent. Unused cable glands to be blocked by blind plug to satisfy IP grade &amp; explosion proof.\n- 29) Enclosure and protection type for electric equipment to be applied as follows unless specified elsewhere in the POS.\n6. -Drip-proof type (IP 20): Inside control room and accommodation\n7. -Drip-proof type (IP 22): Inside engine room (above floor) and other enclosed machinery space\n8. -Splash-proof type (IP 44): Inside engine room (below floor), steering gear, fire control station, purifier space, galley and laundry, bosun store.\n9. -Waterr-p -proof type (IP 56): Weather exposed space\n\n/HHIPN301584/2024-01-25 PM 06:28:29(7/7)\n\n자재구매부/이택용', 'FWG.pdf', 'D:/auto_vectordb/backend/uploaded/project01/cat_01/cat_01_01/FWG.pdf', 'bae0b5904782ab6893ab0a1c778c050b', '1205926e33cfc5d9ae81dde93f6c2dcd', '8ef194de6f50dfeedd5db971b4d0bfc1', '6', 'project01', 'cat_01', 'cat_01_01', '', '', datetime.datetime(2025, 11, 16, 18, 22, 25, 851762, tzinfo=datetime.timezone.utc), datetime.datetime(2025, 11, 16, 18, 22, 25, 851762, tzinfo=datetime.timezone.utc))]
+2025-11-16 18:22:25 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 18:43:13 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 18:43:13 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:44:07 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:44:07 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:44:07 - routers.make_rdb - WARNING - 테이블 pjt_001는 이미 존재합니다.
+2025-11-16 18:44:12 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:44:12 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:51:28 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 18:51:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:57:26 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:57:26 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:57:26 - process.postgres - INFO - DROP TABLE
+2025-11-16 18:57:26 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:57:26 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 18:57:26 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
+2025-11-16 18:57:36 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:57:36 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:57:36 - process.postgres - INFO - CREATE TABLE
+2025-11-16 18:57:36 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:57:36 - process.postgres - INFO - 'pjt_001' 테이블이 성공적으로 생성되었습니다.
+2025-11-16 18:57:36 - process.postgres - INFO - PostgreSQL connection is closed.
+2025-11-16 18:57:36 - routers.make_rdb - INFO - 'pjt_001' 테이블 생성 완료
+2025-11-16 18:57:49 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 18:57:49 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 18:57:49 - routers.make_rdb - WARNING - 테이블 pjt_001는 이미 존재합니다.
+2025-11-16 19:07:28 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:07:28 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:15:13 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:15:13 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:17:27 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:17:27 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:19:45 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:19:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:19:50 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:19:50 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:21:03 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:21:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:22:04 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:22:04 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:23:55 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:23:55 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:25:13 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:25:13 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:28:42 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:28:42 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:30:48 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:30:48 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:31:36 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:31:36 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:31:41 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:31:41 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:32:47 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:32:47 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:33:31 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:33:31 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:34:27 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:34:27 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:35:58 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:35:58 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:35:59 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:35:59 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:35:59 - process.postgres - INFO - 데이티 입력 성공 -10 개
+2025-11-16 19:35:59 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:35:59 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:35:59 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:35:59 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:35:59 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:35:59 - process.postgres - INFO - 데이티 입력 성공 -10 개
+2025-11-16 19:35:59 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:36:19 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:36:19 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:36:41 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:36:41 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:39:03 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:39:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:39:03 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:39:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:39:03 - process.postgres - INFO - 데이티 입력 성공 -10 개
+2025-11-16 19:39:03 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:39:03 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:39:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:39:03 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:39:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:39:03 - process.postgres - INFO - 데이티 입력 성공 -10 개
+2025-11-16 19:39:03 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:39:23 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:39:23 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:41:40 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:41:40 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:41:45 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:41:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:41:45 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:41:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:41:45 - process.postgres - INFO - 데이터 입력 성공 -10 개
+2025-11-16 19:41:45 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:41:45 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:41:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:41:45 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:41:45 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:41:45 - process.postgres - INFO - 데이터 입력 성공 -10 개
+2025-11-16 19:41:45 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:43:04 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:43:04 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:43:04 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:43:04 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:43:04 - process.postgres - INFO - 데이터 입력 성공 -10 개
+2025-11-16 19:43:04 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:43:04 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:43:04 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:43:04 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:43:04 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:43:04 - process.postgres - INFO - 데이터 입력 성공 -10 개
+2025-11-16 19:43:04 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:44:10 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:44:10 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:44:10 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:44:10 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:44:10 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:44:10 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:45:02 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:45:02 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:45:02 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:45:02 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:45:02 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:45:02 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:45:38 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:45:38 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:47:44 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:47:44 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:47:49 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:47:49 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:48:01 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:48:01 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:48:27 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:48:27 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:49:38 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:49:38 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:49:53 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 19:49:53 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:50:04 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:50:04 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:50:36 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:50:36 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:50:41 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:50:41 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:51:36 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:51:36 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:52:44 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:52:44 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:52:44 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:52:44 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:52:44 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:52:44 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:53:52 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:53:52 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:53:52 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:53:52 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:53:52 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:53:52 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:54:03 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:54:03 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:55:50 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:55:50 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:55:50 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:55:50 - process.postgres - INFO - START - INSERT DATA
+2025-11-16 19:55:50 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 19:55:50 - process.postgres - INFO - 데이터베이스 연결 종료
+2025-11-16 19:56:29 - process.postgres - INFO - START - SELECT DATA
+2025-11-16 19:56:29 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 20:00:35 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 20:00:35 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 20:00:43 - process.postgres - INFO - START - GET TABLE NAMES
+2025-11-16 20:00:43 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 20:00:43 - process.postgres - INFO - DROP TABLE
+2025-11-16 20:00:43 - process.postgres - INFO - START - POSTGRESS DB CONNECTION
+2025-11-16 20:00:43 - process.postgres - INFO - 테이블 'pjt_001'이(가) 성공적으로 삭제되었습니다.
+2025-11-16 20:00:43 - routers.make_rdb - INFO - 'pjt_001' 테이블 삭제 완료
