@@ -1,0 +1,3 @@
+2025-11-16 10:56:32 - server - ERROR - 업로드 실패: Error 11001 connecting to redis:6379. getaddrinfo failed.
+2025-11-16 11:04:42 - server - ERROR - 업로드 실패: Error 11001 connecting to redis:6379. getaddrinfo failed.
+2025-11-16 11:12:13 - server - ERROR - 업로드 실패: Error 11001 connecting to redis:6379. getaddrinfo failed.

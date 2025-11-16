@@ -12,3 +12,4 @@ wheels/
 
 # data foler
 backend/uploaded/
+logs/
