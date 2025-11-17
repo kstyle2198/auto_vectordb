@@ -12,6 +12,7 @@ import pdfplumber
 from tqdm.auto import tqdm
 from langchain_core.documents import Document
 from typing import List, Optional
+from langchain_ollama import OllamaEmbeddings
 
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.datamodel.base_models import InputFormat
@@ -38,13 +39,14 @@ class DoclingParser:
         do_table_structure=True,
         ocr_options=EasyOcrOptions(lang=["en", "ko"])
         )
-
+    
     def __init__(self, output_base_path: str = "../docs"):
         """
         Args:
             output_base_path: 파싱된 문서를 저장할 기본 경로
         """
         self.output_base_path = output_base_path
+        self.embed_model=OllamaEmbeddings(base_url="http://localhost:11434", model="bge-m3:latest")
         self._ensure_output_directory()
 
     def _ensure_output_directory(self):
@@ -88,7 +90,10 @@ class DoclingParser:
     def _get_md5_string(self, text:str):
         """문자열의 MD5 해시 반환"""
         return hashlib.md5(text.encode()).hexdigest()
+    
 
+    def _get_embedding(self, text:str):
+        return self.embed_model.embed_query(text)
 
     def _process_single_page(self, loaded_docs, page_num: int, filename: str, filepath:str, lv1_cat: str, lv2_cat: str, lv3_cat: str, lv4_cat: str, first_sentence: str) -> Document:
         """단일 페이지 처리"""
@@ -105,6 +110,7 @@ class DoclingParser:
             hashed_filename = self._get_md5_string(filename)
             hashed_filepath = self._get_md5_string(str(filepath))
             hashed_page_content = self._get_md5_string(docling_text)
+            embeddings = self._get_embedding(docling_text)
 
             # Document 객체 생성
             return Document(
@@ -120,6 +126,7 @@ class DoclingParser:
                     'lv2_cat': lv2_cat,
                     'lv3_cat': lv3_cat,
                     'lv4_cat': lv4_cat,
+                    'embeddings': list(embeddings),
                     'page': str(page_num),
                     'status': 'success'
                     }
@@ -141,6 +148,7 @@ class DoclingParser:
                     'lv3_cat': lv3_cat,
                     'lv4_cat': lv4_cat,
                     'page': str(page_num),
+                    'embeddings': [],
                     'error': str(e),
                     'status': "fail"
                     }

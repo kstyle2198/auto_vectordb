@@ -8,7 +8,7 @@ from process.postgres import PostgresPipeline
 
 
 from utils.config import get_config
-from utils.schema import col_schema
+from utils.schema import pg_schema
 from utils.setlogger import setup_logger
 config = get_config()
 logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
@@ -51,7 +51,7 @@ class ColumnConfig(BaseModel):
 
 class CreateTableRequest(BaseModel):
     table_name: str
-    columns: List[ColumnConfig] = col_schema
+    columns: List[ColumnConfig] = pg_schema
 
 
 @pg_api.post("/create_tables", summary="테이블 생성", tags=["Postgres"])

@@ -10,6 +10,8 @@ class BaseConfig:
     REDIS_PUBSUB_URL: str = os.getenv("REDIS_PUBSUB_URL", "redis://redis:6379/2")
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "admin")
     POSTGRES_PW: str = os.getenv("POSTGRES_PW", "admin123")
+    MARIA_USER: str = os.getenv("MARIA_USER", "admin")
+    MARIA_PW: str = os.getenv("MARIA_PW", "admin123")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 

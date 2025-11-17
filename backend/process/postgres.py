@@ -5,7 +5,6 @@ from psycopg2.extras import execute_batch
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from datetime import datetime
-from uuid import uuid4
 from tqdm import tqdm
 import sys
 from pathlib import Path
@@ -234,10 +233,6 @@ class PostgresPipeline:
         with open(pickle_path, 'rb') as f:
             docs = pickle.load(f)
 
-        # hashed_content = self.select_all_data(table_name=table_name)
-        # print(hashed_content)
-        # flat_hashed_content = [item for sublist in hashed_content["data"] for item in sublist]
-        # print(1)
         # 컬럼 이름을 SQL 쿼리 형식으로 변환
         columns = ['id', 'page_content', 'filename', 'filepath','hashed_filename', 'hashed_filepath', 'hashed_page_content',
                     'page', 'lv1_cat', 'lv2_cat', 'lv3_cat', 'lv4_cat', 'embeddings', 'created_at', 'updated_at']
@@ -259,17 +254,6 @@ class PostgresPipeline:
             # 데이터 정규화
             normalized = []
             for row in tqdm(data):
-                # if row["metadata"].get("hashed_page_content") not in flat_hashed_content:
-                # embeddings 변환 (중요!)
-                emb = row.get("embeddings")
-                if emb is not None:
-                    if isinstance(emb, bytes):
-                        # 이미 bytea면 pass
-                        pass
-                    else:
-                        emb = json.dumps(emb)  # list → json
-                else: emb = ""
-
                 new_row = [
                     row["metadata"].get("id"),
                     row.get("page_content"),
@@ -283,21 +267,15 @@ class PostgresPipeline:
                     row["metadata"].get("lv2_cat"),
                     row["metadata"].get("lv3_cat"),
                     row["metadata"].get("lv4_cat"),
-                    emb,
+                    row["metadata"].get("embeddings"),
                     row.get("created_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")),
                     row.get("updated_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
                     ]
 
                 normalized.append(new_row)
 
-            # print("="*70)
-            # print(normalized)
-
             execute_batch(cur, sql, normalized)
             conn.commit()
-
-            # res = self.select_all_data(table_name)
-            # logger.info(f"데이터 입력 성공 -{len(res)} 개")
                     
         except Exception as error:
             logger.error(f"전체 처리 중 오류 발생: {error}")
