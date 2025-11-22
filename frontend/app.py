@@ -12,6 +12,9 @@ logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 FASTAPI_BASEURL = "http://localhost:8000"
 
+
+if "hashed_filepath" not in st.session_state: st.session_state.hashed_filepath=[]
+
 def list_files_recursive(folder_path: str):
     """폴더 안의 파일을 재귀적으로 읽어서 제너레이터로 반환하는 함수"""
     for root, dirs, files in os.walk(folder_path):
@@ -25,31 +28,31 @@ def count_files(folder_path: str) -> int:
         count += len(files)
     return count
 
-def upload_file_to_backend(local_path: str, server_top_path: str):
-    """파일 경로를 받아서 해당 파일을 백엔드로 보내는 함수"""
-    try:
-        folder_path = os.path.dirname(local_path).replace("\\", "/")
-        server_path = f"{server_top_path}{folder_path.replace('\\', '/').replace(local_base_path, '')}"
+# def upload_file_to_backend(local_path: str):
+#     """파일 경로를 받아서 해당 파일을 백엔드로 보내는 함수"""
+#     try:
+#         folder_path = os.path.dirname(local_path).replace("\\", "/")
+#         server_path = f"{folder_path.replace('\\', '/').replace(local_base_path, '')}"
 
-        with open(local_path, "rb") as f:
-            files = {"file": (os.path.basename(local_path), f)}
-            data = {"local_path": local_path, "server_path": server_path}
+#         with open(local_path, "rb") as f:
+#             files = {"file": (os.path.basename(local_path), f)}
+#             data = {"local_path": local_path, "server_path": server_path}
 
-            requests.post(f"{FASTAPI_BASEURL}/upload", files=files, data=data)
+#             requests.post(f"{FASTAPI_BASEURL}/upload", files=files, data=data)
 
-        logger.info(f"Uploaded Successfully - {local_path}")
+#         logger.info(f"Uploaded Successfully - {local_path}")
 
-    except Exception as e:
-        logger.error(e)
+#     except Exception as e:
+#         logger.error(e)
 
-def upload_file_in_chunks(local_path:str, server_top_path:str):
+def upload_file_in_chunks(local_path:str):
     chunk_size = 10 * 1024 * 1024   # 10MB
     local_filename = os.path.basename(local_path)
     file_size = os.path.getsize(local_path)
     total_chunks = (file_size + chunk_size - 1) // chunk_size
 
     folder_path = os.path.dirname(local_path).replace("\\", "/")
-    server_path = f"{server_top_path}{folder_path.replace('\\', '/').replace(local_base_path, '')}"
+    server_path = f"{folder_path.replace('\\', '/').replace(local_base_path, '')}"
 
     with open(local_path, "rb") as f:
         for chunk_index in range(total_chunks):
@@ -141,7 +144,8 @@ if __name__ == "__main__":
         server_top_path = "project01"                     # Server top folder path
 
         folder_path = st.text_input("로컬 파일 베이스 경로를 입력하세요(서버 저장 경로에서는 제거 대상)", value=local_base_path)
-        server_top_path = st.text_input("서버에 저장할 최상위 폴더명(프로젝트명)을 입력하세요", value=server_top_path)
+        folder_path = folder_path.replace("\\", "/")
+        # server_top_path = st.text_input("서버에 저장할 최상위 폴더명(프로젝트명)을 입력하세요", value=server_top_path)
 
         if st.button("대용량 청킹 파일 전송"):
             if not os.path.exists(folder_path):
@@ -159,7 +163,7 @@ if __name__ == "__main__":
             files = list_files_recursive(folder_path)
 
             for idx, local_path in enumerate(files, start=1):
-                upload_file_in_chunks(local_path=local_path, server_top_path=server_top_path)
+                upload_file_in_chunks(local_path=local_path)
 
                 progress = idx / total_files
                 progress_bar.progress(progress)
@@ -223,59 +227,99 @@ if __name__ == "__main__":
                 except Exception as e:
                     st.error(f"서버 요청 중 오류 발생: {e}")
 
+
+        st.title("🔍 Unique Hashed Filepath 조회 UI")
+        # 입력 form
+        st.subheader("조회 파라미터 입력")
+
+        table_name = st.text_input("Table Name", value="my_table")
+
+        if st.button("조회 실행"):
+            if not table_name:
+                st.error("table_name과 hashed_filepath를 모두 입력하세요.")
+            else:
+                with st.spinner("API 호출 중..."):
+                    try:
+                        url = f"{FASTAPI_BASEURL}/unique-filepath/{table_name}"
+                        response = requests.get(url)
+
+                        if response.status_code != 200:
+                            st.error(f"❌ 서버 오류: {response.status_code}")
+                        else:
+                            data = response.json()
+
+                            if data.get("status") == "ok":
+                                st.success("조회 성공!")
+                                st.write(f"총 개수: **{data.get('count')}**")
+                                st.session_state.hashed_filepath = data.get("hashed_filepaths")
+                                # st.json(data.get("hashed_filepaths"))
+                            else:
+                                st.error(f"⚠️ 오류: {data.get('message')}")
+                    except Exception as e:
+                        st.error(f"API 호출 중 오류 발생: {e}")
+        st.session_state.hashed_filepath
+
+        
+
     with tab5:
         with st.expander("1. 문서 색인 요청"):
             st.header("1. 문서 색인 요청")
             st.subheader("`/index/document` 엔드포인트")
 
+            st.session_state.hashed_filepath
+
             with st.form("index_form"):
                 # 입력 필드
                 table_name = st.text_input("**Table Name**", key="index_table_name", placeholder="예: my_documents_table")
-                hashed_filepath = st.text_input("**Hashed Filepath (ID)**", key="index_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
+                # hashed_filepath = st.text_input("**Hashed Filepath (ID)**", key="index_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
                 
                 # 폼 제출 버튼
                 submit_index = st.form_submit_button("🚀 문서 색인 요청")
 
                 if submit_index:
-                    if not table_name or not hashed_filepath:
-                        st.error("⚠️ Table Name과 Hashed Filepath를 모두 입력해주세요.")
-                    else:
-                        endpoint_url = f"{FASTAPI_BASEURL}/index/document"
-                        payload = {
-                            "table_name": table_name,
-                            "hashed_filepath": hashed_filepath
-                        }
-                        
-                        st.info(f"요청 URL: **POST** `{endpoint_url}`")
-                        st.json(payload)
-                        
-                        try:
-                            # API 호출
-                            response = requests.post(endpoint_url, json=payload, timeout=10)
+                    for hashed_filepath in st.session_state.hashed_filepath:
+                        if not table_name or not hashed_filepath:
+                            st.error("⚠️ Table Name과 Hashed Filepath를 모두 입력해주세요.")
+                        else:
+                            endpoint_url = f"{FASTAPI_BASEURL}/index/document"
+                            payload = {
+                                "index_name": table_name,
+                                "table_name": table_name,
+                                "hashed_filepath": hashed_filepath
+                            }
                             
-                            # 결과 처리
-                            if response.status_code == 200:
-                                st.success("✅ **색인 요청 성공!**")
-                                st.json(response.json())
-                            else:
-                                st.error(f"❌ **색인 요청 실패!** (Status Code: {response.status_code})")
-                                try:
+                            st.info(f"요청 URL: **POST** `{endpoint_url}`")
+                            st.json(payload)
+                            
+                            try:
+                                # API 호출
+                                response = requests.post(endpoint_url, json=payload, timeout=10)
+                                
+                                # 결과 처리
+                                if response.status_code == 200:
+                                    st.success("✅ **색인 요청 성공!**")
                                     st.json(response.json())
-                                except json.JSONDecodeError:
-                                    st.text(response.text)
-                                    
-                        except requests.exceptions.ConnectionError:
-                            st.error(f"🔌 **연결 오류:** API 서버 ({FASTAPI_BASEURL})에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.")
-                        except requests.exceptions.Timeout:
-                            st.error("⏳ **시간 초과 오류:** API 응답 시간이 초과되었습니다.")
-                        except Exception as e:
-                            st.exception(e)
+                                else:
+                                    st.error(f"❌ **색인 요청 실패!** (Status Code: {response.status_code})")
+                                    try:
+                                        st.json(response.json())
+                                    except json.JSONDecodeError:
+                                        st.text(response.text)
+                                        
+                            except requests.exceptions.ConnectionError:
+                                st.error(f"🔌 **연결 오류:** API 서버 ({FASTAPI_BASEURL})에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.")
+                            except requests.exceptions.Timeout:
+                                st.error("⏳ **시간 초과 오류:** API 응답 시간이 초과되었습니다.")
+                            except Exception as e:
+                                st.exception(e)
+
         with st.expander("2. 문서 조회 요청"):
             st.header("2. 문서 조회 요청")
             st.subheader("`/document/{hashed_filepath}` 엔드포인트")
 
             with st.form("get_form"):
                 # 입력 필드
+                index_name = st.text_input("**Index_Name**", key="ggg123", placeholder="인덱스 네임 입력")
                 hashed_filepath_get = st.text_input("**Hashed Filepath (ID)**", key="get_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
                 
                 # 폼 제출 버튼
@@ -285,7 +329,7 @@ if __name__ == "__main__":
                 if not hashed_filepath_get:
                     st.error("⚠️ Hashed Filepath를 입력해주세요.")
                 else:
-                    endpoint_url = f"{FASTAPI_BASEURL}/document/{hashed_filepath_get}"
+                    endpoint_url = f"{FASTAPI_BASEURL}/document/{index_name}/{hashed_filepath_get}"
                     
                     st.info(f"요청 URL: **GET** `{endpoint_url}`")
                     
@@ -320,6 +364,7 @@ if __name__ == "__main__":
 
             with st.form("search_form"):
                 # 입력 필드: 쿼리 텍스트
+                index_name = st.text_input("**Index_Name**", key="index_name", placeholder="검색할 인덱스 이름 입력")
                 query_text = st.text_area("**검색 쿼리 (query_text)**", key="search_query_text", height=100, placeholder="검색할 내용을 입력하세요. 예: 새로운 에너지 정책의 주요 내용")
                 
                 # 옵션 필드: size 및 min_score
@@ -349,6 +394,7 @@ if __name__ == "__main__":
                     endpoint_url = f"{FASTAPI_BASEURL}/search"
                     payload = {
                         # UI는 query_text만 입력받고, query_embedding은 백엔드가 생성하도록 요청
+                        "index_name": index_name,
                         "query_text": query_text,
                         "size": size,
                         "min_score": min_score_float

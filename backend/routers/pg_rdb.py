@@ -137,3 +137,20 @@ async def select_all(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@pg_api.get("/unique-filepath/{table_name}", tags=["Postgres"])
+def get_unique_hashed_filepath(table_name: str):
+    """
+    hashed_filepath 고유값 리스트 조회 API
+    """
+    result = pg.get_unique_hashed_filepath(table_name)
+
+    if result is None:
+        return {"status": "error", "message": "DB 조회 중 오류 발생"}
+
+    return {
+        "status": "ok",
+        "count": len(result),
+        "hashed_filepaths": result
+        }

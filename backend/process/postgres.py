@@ -339,6 +339,28 @@ class PostgresPipeline:
         finally:
             if conn:
                 conn.close()
+    
+    def get_unique_hashed_filepath(self, table_name):
+        """
+        PostgreSQL에서 특정 hashed_filepath 데이터만 조회하는 함수 (중복 제거)
+        """
+        conn = None
+        try:
+            conn = self._get_db_connection()
+            cur = conn.cursor()
+
+            query = f"SELECT hashed_filepath FROM {table_name}"
+            cur.execute(query)
+            
+            rows = cur.fetchall()
+            return list({row[0] for row in rows})
+
+        except Exception as e:
+            print("Error:", e)
+            return None
+        finally:
+            if conn:
+                conn.close()
 
     def delete_data_by_id(self, table_name: str, id_column: str, record_id: int):
         """특정 ID를 가진 레코드를 테이블에서 삭제합니다."""
