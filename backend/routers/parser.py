@@ -12,7 +12,7 @@ logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 
 # DoclingParser 인스턴스 생성
-parser = DoclingParser(output_base_path="./docs")
+parser = DoclingParser(output_base_path="./docs/parsed")
 parser_api = APIRouter()
 
 @parser_api.post("/parse_pdf_by_path", tags=["Parser"])

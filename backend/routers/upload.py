@@ -32,8 +32,8 @@ async def upload(file: UploadFile = File(...), local_path: str = Form(...), serv
     Raises:
         HTTPException: 파일 저장 중 오류 발생 시 500 에러 반환
     """
-    save_path = f"./uploaded/{server_path}/{file.filename}"
-    os.makedirs(f"./uploaded/{server_path}", exist_ok=True)
+    save_path = f"./docs/uploaded/{server_path}/{file.filename}"
+    os.makedirs(f"./docs/uploaded/{server_path}", exist_ok=True)
 
     with open(save_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -80,7 +80,7 @@ async def upload_chunk(
     """
     try:
         # 최종 저장될 파일 경로
-        folder = f"./uploaded/{server_path}"
+        folder = f"./docs/uploaded/{server_path}"
         os.makedirs(folder, exist_ok=True)
         save_path = f"{folder}/{filename}"
         # 각 chunk를 append 형식으로 저장

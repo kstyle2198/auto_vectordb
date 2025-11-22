@@ -5,16 +5,5 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "aiofiles>=25.1.0",
-    "celery>=5.5.3",
-    "docling>=2.61.2",
-    "easyocr>=1.7.2",
-    "fastapi[standard]>=0.121.2",
-    "langchain>=1.0.7",
-    "langchain-ollama>=1.0.0",
-    "pdfplumber>=0.11.8",
-    "psycopg2-binary>=2.9.11",
-    "pymysql>=1.1.2",
-    "redis>=7.0.1",
-    "streamlit>=1.51.0",
+    "postgres>=4.0",
 ]

@@ -105,7 +105,6 @@ async def insert_from_pickle(
         files = list_files_recursive(pickle_path)
         for pickle_path in files:
             pickle_path = pickle_path.replace("\\", "/")
-            print(pickle_path)
             if pickle_path.endswith(".pkl"):
                 pg.insert_data_from_pickle(table_name, pickle_path)     
 

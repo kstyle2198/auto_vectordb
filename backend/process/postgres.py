@@ -318,6 +318,28 @@ class PostgresPipeline:
                 cur.close()
                 conn.close()
 
+    def get_row_by_hashed_filepath(self, table_name, hashed_filepath):
+        """
+        PostgreSQL에서 특정 hashed_filepath의 데이터를 조회하는 함수
+        """
+        conn = None
+        try:
+            conn = self._get_db_connection()
+            cur = conn.cursor()
+
+            query = f"SELECT * FROM {table_name} WHERE hashed_filepath = %s"
+            cur.execute(query, (hashed_filepath,))
+            
+            result = cur.fetchall()
+            return result
+
+        except Exception as e:
+            print("Error:", e)
+            return None
+        finally:
+            if conn:
+                conn.close()
+
     def delete_data_by_id(self, table_name: str, id_column: str, record_id: int):
         """특정 ID를 가진 레코드를 테이블에서 삭제합니다."""
         conn = None

@@ -187,10 +187,9 @@ class MariaPipeline:
         conn = None
         cur = None
         pickle_path = pickle_path.replace("\\", "/")
-
         with open(pickle_path, 'rb') as f:
             docs = pickle.load(f)
-
+        
         columns = ['id', 'page_content', 'filename', 'filepath','hashed_filename', 'hashed_filepath',
                     'hashed_page_content', 'page', 'lv1_cat', 'lv2_cat', 'lv3_cat', 'lv4_cat',
                     'embeddings', 'created_at', 'updated_at']
@@ -206,7 +205,6 @@ class MariaPipeline:
             cur = conn.cursor()
 
             data = [{"page_content": doc.page_content, "metadata": doc.metadata} for doc in docs]
-
             normalized = []
             for row in tqdm(data):
                 new_row = [
@@ -290,5 +288,5 @@ class MariaPipeline:
 
 if __name__ == "__main__":
     db = MariaPipeline()
-    pickle_path = "D:/auto_vectordb/backend/docs/project01/cat_01/cat_01_01/FWG.pkl"
-    db.insert_data_from_pickle(table_name="pjt_001", pickle_path=pickle_path)
+    pickle_path = "D:/auto_vectordb/backend/docs/parsed/project01/cat_01/cat_01_01/FWG.pkl"
+    db.insert_data_from_pickle(table_name="test_001", pickle_path=pickle_path)

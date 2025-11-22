@@ -21,14 +21,14 @@ app.add_middleware(
 from routers.pg_rdb import pg_api
 app.include_router(pg_api)
 
-from routers.maria_rdb import maria_api
-app.include_router(maria_api)
-
 from routers.upload import upload_api
 app.include_router(upload_api)
 
 from routers.parser import parser_api
 app.include_router(parser_api)
+
+from routers.es_index import es_api
+app.include_router(es_api)
 
 
 if __name__ == "__main__":

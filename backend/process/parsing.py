@@ -296,7 +296,7 @@ if __name__ == "__main__":
     
     # 배치 처리
     all_docs = parser.batch_parse_pdfs(
-        folder_path="../uploaded",
+        folder_path="../docs/uploaded",
         remove_original=True
         )
     print(all_docs)
