@@ -6,7 +6,10 @@
 ### Daily Progress
 
 - 11/16: Make RDB, PDF Upload, Parsing, Insert RDB
+- 11/22: Insert RDB ElasticSearch Indexing and Refactoring (phase1 completed)
 
 
 
-<img width="853" height="453" alt="image" src="https://github.com/user-attachments/assets/7b11a7d0-4c74-4c44-b340-9a33e8371b04" />
+<img width="1870" height="903" alt="image" src="https://github.com/user-attachments/assets/152ab498-4907-4138-ab29-8dcd50e8da53" />
+
+
