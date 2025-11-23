@@ -304,6 +304,50 @@ class ElasticsearchIndexer:
         except Exception as e:
             logger.error(f"Error searching documents: {e}")
             return []
+        
+    def get_all_index_names(self):
+        """
+        Elasticsearch 클러스터에 존재하는 모든 인덱스의 이름을 리스트로 반환합니다.
+        """
+        try:
+            # indices.get_alias("*")는 모든 인덱스의 별칭 정보를 가져오며, 
+            # 딕셔너리의 키(key)가 인덱스 이름입니다.
+            indices_dict = self.es.indices.get_alias(index="*")
+            index_names = list(indices_dict.keys())
+            
+            logger.info(f"Retrieved {len(index_names)} indices from Elasticsearch.")
+            return indices_dict
+            
+        except Exception as e:
+            logger.error(f"Error fetching all index names: {e}")
+            return []
+
+    def delete_index_by_name(self, index_name: str):
+        """
+        지정된 이름의 인덱스를 삭제합니다.
+        
+        Args:
+            index_name (str): 삭제할 인덱스의 이름
+        
+        Returns:
+            bool: 삭제 성공 시 True, 실패하거나 존재하지 않으면 False
+        """
+        if not index_name:
+            logger.warning("No index name provided for deletion.")
+            return False
+
+        try:
+            if self.es.indices.exists(index=index_name):
+                self.es.indices.delete(index=index_name)
+                logger.info(f"Index '{index_name}' has been deleted successfully.")
+                return True
+            else:
+                logger.warning(f"Index '{index_name}' does not exist, skipping deletion.")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error deleting index '{index_name}': {e}")
+            return False
 
 if __name__ == "__main__":
     

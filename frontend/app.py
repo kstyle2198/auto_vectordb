@@ -1,9 +1,13 @@
 import os
 import json
+import base64
 import requests
 import streamlit as st
+import streamlit.components.v1 as components
 from pathlib import Path
 from tqdm.auto import tqdm
+
+st.set_page_config(page_title="Auto VectorDB", page_icon="🐬", layout="wide", initial_sidebar_state="collapsed")
 
 from utils.config import get_config
 from utils.setlogger import setup_logger
@@ -11,6 +15,116 @@ config = get_config()
 logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 FASTAPI_BASEURL = "http://localhost:8000"
+
+
+from utils.style import HOVERING_EFFECT
+# ==== Background Image ====
+def get_base64_of_image(image_file):
+    """이미지 파일을 Base64로 인코딩하여 문자열로 반환합니다."""
+    with open(image_file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+def set_background(image_file, overlay_color="rgba(255,255,255,0.5)"):
+    """
+    CSS를 사용하여 부드럽게 움직이는 배경 이미지와 오버레이를 설정합니다.
+    """
+    bin_str = get_base64_of_image(image_file)
+    page_bg_img = f"""
+    <style>
+    /* 움직이는 애니메이션 효과 정의 */
+    @keyframes panImage {{
+        0%   {{ background-position: 0% 50%; }}
+        50%  {{ background-position: 100% 50%; }}
+        100% {{ background-position: 0% 50%; }}
+    }}
+
+    /* 앱 전체 배경 설정 */
+    [data-testid="stAppViewContainer"],
+    [data-testid="stHeader"] {{
+        position: relative;
+        background: url("data:image/png;base64,{bin_str}") no-repeat center center fixed;
+        /* 이미지를 화면보다 약간만 크게 만들어 자연스러운 움직임 유도 */
+        background-size: 115% auto;
+        /* ⭐️ 개선된 부분: 지속시간, 타이밍 함수, 반복 */
+        animation: panImage 80s ease-in-out infinite;
+    }}
+
+    /* 배경 위 오버레이 효과 */
+    [data-testid="stAppViewContainer"]::before,
+    [data-testid="stHeader"]::before {{
+        content: "";
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: {overlay_color};
+        z-index: 0; /* 콘텐츠 뒤에 위치 */
+    }}
+
+    /* 콘텐츠가 오버레이 위에 오도록 설정 및 **글자색 검정으로 변경** */
+    .stApp, [data-testid="stAppViewContainer"] {{
+        position: relative;
+        z-index: 1;
+        color: black; /* 기본 글자색을 검정으로 설정 (추가된 부분) */**
+    }}
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+
+# --- 이미지 파일 경로 설정 (사용자 환경에 맞게 수정해주세요) ---
+image_path = "./system_image/bg_img1.jpg"
+if os.path.exists(image_path):
+    # 오버레이 색상을 밝게 설정했으므로 글자색을 검정으로 변경하는 것이 가독성에 좋습니다.
+    set_background(image_path, overlay_color="rgba(255,255,255,0.6)")
+else:
+    st.warning(f"배경 이미지 파일을 찾을 수 없습니다: {image_path}")
+
+# Inject CSS style for Hover effect
+st.markdown(HOVERING_EFFECT, unsafe_allow_html=True)
+
+def make_hover_container(title:str, content:str, url:str, height:str = "auto"):
+    st.markdown(f"""
+            <a href="{url}" target="_blank" class="clickable-box-wrapper">
+            <div class="hover-box" style="height: {height};">
+                <h1>{title}</h1>
+                <p>{content}</p></div>
+            </a>
+        """, unsafe_allow_html=True)
+    
+image_paths = [
+    "./system_image/img1.jpg",
+    "./system_image/img2.jpg",
+    "./system_image/img3.jpg",
+    "./system_image/img4.jpg",
+]
+# base64로 인코딩된 이미지 태그 생성 함수
+def get_base64_img_tag(file_path):
+    with open(file_path, "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode()
+        return f'<img src="data:image/png;base64,{encoded}" style="width: 100%; position: absolute; opacity: 0; transition: opacity 1s;">'
+
+# 이미지 태그 리스트 생성
+image_tags = ''.join([get_base64_img_tag(path) for path in image_paths])
+
+# HTML + JS 코드로 슬라이드쇼 구성
+html_code = f"""
+<div id="slideshow" style="position: relative; width: 100%; max-width: 800px; margin: auto; height: 500px;">
+  {image_tags}
+</div>
+
+<script>
+const slides = document.querySelectorAll("#slideshow img");
+let current = 0;
+
+function showNextSlide() {{
+    slides[current].style.opacity = 0;
+    current = (current + 1) % slides.length;
+    slides[current].style.opacity = 1;
+}}
+
+slides[0].style.opacity = 1;
+setInterval(showNextSlide, 3000);
+</script>
+"""
 
 
 if "hashed_filepath" not in st.session_state: st.session_state.hashed_filepath=[]
@@ -28,31 +142,15 @@ def count_files(folder_path: str) -> int:
         count += len(files)
     return count
 
-# def upload_file_to_backend(local_path: str):
-#     """파일 경로를 받아서 해당 파일을 백엔드로 보내는 함수"""
-#     try:
-#         folder_path = os.path.dirname(local_path).replace("\\", "/")
-#         server_path = f"{folder_path.replace('\\', '/').replace(local_base_path, '')}"
-
-#         with open(local_path, "rb") as f:
-#             files = {"file": (os.path.basename(local_path), f)}
-#             data = {"local_path": local_path, "server_path": server_path}
-
-#             requests.post(f"{FASTAPI_BASEURL}/upload", files=files, data=data)
-
-#         logger.info(f"Uploaded Successfully - {local_path}")
-
-#     except Exception as e:
-#         logger.error(e)
-
-def upload_file_in_chunks(local_path:str):
+def upload_file_in_chunks(local_base_path:str, local_path:str):
     chunk_size = 10 * 1024 * 1024   # 10MB
     local_filename = os.path.basename(local_path)
     file_size = os.path.getsize(local_path)
     total_chunks = (file_size + chunk_size - 1) // chunk_size
 
-    folder_path = os.path.dirname(local_path).replace("\\", "/")
-    server_path = f"{folder_path.replace('\\', '/').replace(local_base_path, '')}"
+    folder_path = os.path.dirname(local_path).replace("\\", "/") # 맨 끝 파일명 제외한 상위 경로
+    delted_path = os.path.dirname(local_base_path).replace("\\", "/") # 폴더 경로에서 맨끝 폴더 제외 --> 서버 저장시 제거할 경로명
+    server_path = f"{folder_path.replace('\\', '/').replace(delted_path, '')}"
 
     with open(local_path, "rb") as f:
         for chunk_index in range(total_chunks):
@@ -94,183 +192,184 @@ col_schema = [
 
 
 if __name__ == "__main__":
+    st.title(":blue[Auto VectorDB]")
+    st.markdown("---")
 
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Make_RDB", "Upload", "Parsing", "Insert_Data", "ElasticSearch"])
-    with tab1: 
-        st.title("Create Postgres RDB")
-        table_name = st.text_input("테이블명 입력", placeholder="예: my_table", value="test007")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1: 
+        st.subheader(":blue[Create Postgres Table]")
+        st.info("파싱 데이터를 저장할 RDB 준비")
+        with st.expander("Create Table"):
+            table_name = st.text_input("테이블명 입력(프로젝트명과 동일하게)", placeholder="예: my_table", value="프로젝트명")
 
-        if st.button("🚀 테이블 생성 요청"):
-            if table_name.strip() == "":
-                st.error("테이블명을 입력하세요.")
-            else:
-                # FastAPI 요청 payload 생성
-                payload = {
-                    "table_name": table_name,
-                    "columns": col_schema
-                    }
+            if st.button("🚀 테이블 생성"):
+                if table_name.strip() == "":
+                    st.error("테이블명을 입력하세요.")
+                else:
+                    # FastAPI 요청 payload 생성
+                    payload = {
+                        "table_name": table_name,
+                        "columns": col_schema
+                        }
 
+                    try:
+                        res = requests.post(f"{FASTAPI_BASEURL}/create_tables", json=payload)
+
+                        if res.status_code == 200:
+                            st.success(res.json().get("message"))
+                        else:
+                            st.error(f"오류: {res.text}")
+
+                    except Exception as e:
+                        st.error(f"API 호출 중 오류: {str(e)}")
+
+            if st.button("🔍 테이블 확인"):
                 try:
-                    res = requests.post(f"{FASTAPI_BASEURL}/create_tables", json=payload)
-
+                    res = requests.get(f"{FASTAPI_BASEURL}/tables")
                     if res.status_code == 200:
-                        st.success(res.json().get("message"))
+                        tables = res.json().get("tables", [])
+
+                        if table_name not in tables:
+                            st.info("테이블이 없습니다.")
+                        else:
+                            st.info(f"테이블 {table_name}이 잘 생성되었습니다..")
                     else:
                         st.error(f"오류: {res.text}")
 
                 except Exception as e:
                     st.error(f"API 호출 중 오류: {str(e)}")
 
-        if st.button("🔍 테이블 생성 결과 확인"):
-            try:
-                res = requests.get(f"{FASTAPI_BASEURL}/tables")
-                if res.status_code == 200:
-                    tables = res.json().get("tables", [])
+    with col2:
+        st.subheader(":green[Local File Upload]")
+        st.info("로컬 파일을 서버 사이드로 이동")
+        local_base_path_sample = "C:\\Users\\jongb\\OneDrive\\바탕 화면\\temp\\프로젝트명"   # Local top folder path
+        local_base_path_sample = local_base_path_sample.replace("\\", "/")
 
-                    if table_name not in tables:
-                        st.info("테이블이 없습니다.")
-                    else:
-                        st.info(f"테이블 {table_name}이 잘 생성되었습니다..")
+        with st.expander("File Upload"):
+            local_base_path = st.text_input("로컬 프로젝트 폴더 경로를 입력하세요", value=local_base_path_sample)
+            local_base_path = local_base_path.replace("\\", "/")
+        
+            if st.button("대용량 청킹 파일 전송"):
+                if not os.path.exists(local_base_path):
+                    st.error("❌ 경로가 존재하지 않습니다.")
+                    st.stop()
+
+                total_files = count_files(local_base_path)
+                if total_files == 0:
+                    st.warning("📁 전송할 파일이 없습니다.")
+                    st.stop()
+
+                progress_bar = st.progress(0)
+                status = st.empty()
+
+                files = list_files_recursive(local_base_path)
+
+                for idx, local_path in enumerate(files, start=1):
+                    upload_file_in_chunks(local_base_path=local_base_path, local_path=local_path)
+
+                    progress = idx / total_files
+                    progress_bar.progress(progress)
+                    status.write(f"({idx}/{total_files}) 업로드 중: {local_path}")
+
+                st.success("🎉 모든 파일 업로드 완료!")
+
+    with col3:
+        st.subheader(":blue[PDF Parsing 배치 처리]")
+        st.info("PDF 파싱후 Pickle 형식 저장")
+
+        with st.expander("Parsing with Docling"):
+
+            # 폴더 경로 입력
+            folder_path = st.text_input("폴더 경로를 입력하세요", "./docs/uploaded/프로젝트명")
+
+            # remove_original 옵션
+            remove_original = st.checkbox("처리 후 원본 파일 삭제(위 폴더 경로 내부 폴더 및 파일 삭제)", value=False)
+
+            if st.button("배치 처리 시작"):
+                if not folder_path:
+                    st.error("폴더 경로를 입력하세요.")
                 else:
-                    st.error(f"오류: {res.text}")
+                    with st.spinner("배치 처리 중..."):
+                        try:
+                            response = requests.post(
+                                f"{FASTAPI_BASEURL}/batch_parse_by_folder",
+                                data={
+                                    "folder_path": folder_path,
+                                    "remove_original": remove_original
+                                }
+                            )
+                            if response.status_code == 200:
+                                result = response.json()
+                                st.success(f"배치 처리 완료! - 총 {len(result)}개 문서")
+                            else:
+                                st.error(f"에러 발생: {response.status_code} - {response.text}")
+                        except Exception as e:
+                            st.error(f"서버 연결 실패: {e}")
+    
+    with col4:
+        st.subheader(":green[Postgres 데이터 Insert]")
+        st.info("Pickle 데이터를 RDB에 저장")
 
-            except Exception as e:
-                st.error(f"API 호출 중 오류: {str(e)}")
+        with st.expander("Data Insert"):
 
-    with tab2:
-        st.title("Local File Upload Example")
-        local_base_path = "C:\\Users\\jongb\\OneDrive\\바탕 화면\\temp"   # Local top folder path
-        local_base_path = local_base_path.replace("\\", "/")
-        server_top_path = "project01"                     # Server top folder path
-
-        folder_path = st.text_input("로컬 파일 베이스 경로를 입력하세요(서버 저장 경로에서는 제거 대상)", value=local_base_path)
-        folder_path = folder_path.replace("\\", "/")
-        # server_top_path = st.text_input("서버에 저장할 최상위 폴더명(프로젝트명)을 입력하세요", value=server_top_path)
-
-        if st.button("대용량 청킹 파일 전송"):
-            if not os.path.exists(folder_path):
-                st.error("❌ 경로가 존재하지 않습니다.")
-                st.stop()
-
-            total_files = count_files(folder_path)
-            if total_files == 0:
-                st.warning("📁 전송할 파일이 없습니다.")
-                st.stop()
-
-            progress_bar = st.progress(0)
-            status = st.empty()
-
-            files = list_files_recursive(folder_path)
-
-            for idx, local_path in enumerate(files, start=1):
-                upload_file_in_chunks(local_path=local_path)
-
-                progress = idx / total_files
-                progress_bar.progress(progress)
-                status.write(f"({idx}/{total_files}) 업로드 중: {local_path}")
-
-            st.success("🎉 모든 파일 업로드 완료!")
-
-    with tab3:
-        st.title("PDF Parsing 배치 처리")
-
-        # 폴더 경로 입력
-        folder_path = st.text_input("폴더 경로를 입력하세요", "./docs/uploaded")
-
-        # remove_original 옵션
-        remove_original = st.checkbox("처리 후 원본 파일 삭제(위 폴더 경로 내부 폴더 및 파일 삭제)", value=False)
-        remove_original
-
-        if st.button("배치 처리 시작"):
-            if not folder_path:
-                st.error("폴더 경로를 입력하세요.")
-            else:
-                with st.spinner("배치 처리 중..."):
+            # -----------------------------
+            # 💠 1) 피클 파일에서 DB로 데이터 삽입
+            # -----------------------------
+            table_name = st.text_input("테이블 이름", value="프로젝트명")
+            pickle_folder = st.text_input("피클 폴더 경로", value="./docs/parsed/프로젝트명")
+            submitted = st.button("삽입 실행")
+            with st.spinner("Processing..."):
+                if submitted:
                     try:
                         response = requests.post(
-                            f"{FASTAPI_BASEURL}/batch_parse_by_folder",
-                            data={
-                                "folder_path": folder_path,
-                                "remove_original": remove_original
-                            }
-                        )
+                            f"{FASTAPI_BASEURL}/insert_from_pickle",
+                            data={"table_name": table_name, "pickle_path": pickle_folder}
+                            )
                         if response.status_code == 200:
-                            result = response.json()
-                            st.success(f"배치 처리 완료! - 총 {len(result)}개 문서")
+                            st.success(response.json().get("message"))
                         else:
-                            st.error(f"에러 발생: {response.status_code} - {response.text}")
+                            st.error(response.json().get("detail", "알 수 없는 오류"))
                     except Exception as e:
-                        st.error(f"서버 연결 실패: {e}")
-    
-    with tab4:
-        st.title("Postgres 데이터 Insert")
-
-        # -----------------------------
-        # 💠 1) 피클 파일에서 DB로 데이터 삽입
-        # -----------------------------
-        st.markdown("피클 파일에서 DB로 데이터 삽입")
-
-        table_name = st.text_input("테이블 이름")
-        pickle_folder = st.text_input("피클 폴더 경로")
-        submitted = st.button("삽입 실행")
-        with st.spinner("Processing..."):
-            if submitted:
-                try:
-                    response = requests.post(
-                        f"{FASTAPI_BASEURL}/insert_from_pickle",
-                        data={"table_name": table_name, "pickle_path": pickle_folder}
-                        )
-                    if response.status_code == 200:
-                        st.success(response.json().get("message"))
-                    else:
-                        st.error(response.json().get("detail", "알 수 없는 오류"))
-                except Exception as e:
-                    st.error(f"서버 요청 중 오류 발생: {e}")
+                        st.error(f"서버 요청 중 오류 발생: {e}")
 
 
-        st.title("🔍 Unique Hashed Filepath 조회 UI")
-        # 입력 form
-        st.subheader("조회 파라미터 입력")
+        with st.expander("결과 확인(Hashed FilePath 조회)"):
 
-        table_name = st.text_input("Table Name", value="my_table")
+            table_name = st.text_input("Table Name", value="프로젝트명")
+            if st.button("조회 실행"):
+                if not table_name:
+                    st.error("table_name과 hashed_filepath를 모두 입력하세요.")
+                else:
+                    with st.spinner("API 호출 중..."):
+                        try:
+                            url = f"{FASTAPI_BASEURL}/unique-filepath/{table_name}"
+                            response = requests.get(url)
 
-        if st.button("조회 실행"):
-            if not table_name:
-                st.error("table_name과 hashed_filepath를 모두 입력하세요.")
-            else:
-                with st.spinner("API 호출 중..."):
-                    try:
-                        url = f"{FASTAPI_BASEURL}/unique-filepath/{table_name}"
-                        response = requests.get(url)
-
-                        if response.status_code != 200:
-                            st.error(f"❌ 서버 오류: {response.status_code}")
-                        else:
-                            data = response.json()
-
-                            if data.get("status") == "ok":
-                                st.success("조회 성공!")
-                                st.write(f"총 개수: **{data.get('count')}**")
-                                st.session_state.hashed_filepath = data.get("hashed_filepaths")
-                                # st.json(data.get("hashed_filepaths"))
+                            if response.status_code != 200:
+                                st.error(f"❌ 서버 오류: {response.status_code}")
                             else:
-                                st.error(f"⚠️ 오류: {data.get('message')}")
-                    except Exception as e:
-                        st.error(f"API 호출 중 오류 발생: {e}")
-        st.session_state.hashed_filepath
+                                data = response.json()
 
-        
-
-    with tab5:
-        with st.expander("1. 문서 색인 요청"):
-            st.header("1. 문서 색인 요청")
-            st.subheader("`/index/document` 엔드포인트")
-
+                                if data.get("status") == "ok":
+                                    st.success("조회 성공!")
+                                    st.write(f"총 개수: **{data.get('count')}**")
+                                    st.session_state.hashed_filepath = data.get("hashed_filepaths")
+                                    # st.json(data.get("hashed_filepaths"))
+                                else:
+                                    st.error(f"⚠️ 오류: {data.get('message')}")
+                        except Exception as e:
+                            st.error(f"API 호출 중 오류 발생: {e}")
             st.session_state.hashed_filepath
 
+    with col5:
+        st.subheader(":blue[Elastic Indexing]")
+        st.info("RDB 데이터를 Elastic 인덱싱")
+        with st.expander("1. 문서 색인"):
+
+            st.session_state.hashed_filepath
             with st.form("index_form"):
                 # 입력 필드
-                table_name = st.text_input("**Table Name**", key="index_table_name", placeholder="예: my_documents_table")
+                table_name = st.text_input("**Table Name(=index_name)**", key="index_table_name", placeholder="예: 프로젝트명")
                 # hashed_filepath = st.text_input("**Hashed Filepath (ID)**", key="index_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
                 
                 # 폼 제출 버튼
@@ -313,13 +412,10 @@ if __name__ == "__main__":
                             except Exception as e:
                                 st.exception(e)
 
-        with st.expander("2. 문서 조회 요청"):
-            st.header("2. 문서 조회 요청")
-            st.subheader("`/document/{hashed_filepath}` 엔드포인트")
-
+        with st.expander("2. 문서 조회 테스트"):
             with st.form("get_form"):
                 # 입력 필드
-                index_name = st.text_input("**Index_Name**", key="ggg123", placeholder="인덱스 네임 입력")
+                index_name = st.text_input("**Index_Name**", key="ggg123", placeholder="프로젝트명")
                 hashed_filepath_get = st.text_input("**Hashed Filepath (ID)**", key="get_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
                 
                 # 폼 제출 버튼
@@ -358,14 +454,11 @@ if __name__ == "__main__":
                     except Exception as e:
                         st.exception(e)
 
-        with st.expander("3. 문서 검색 요청 (하이브리드 지원)"):
-            st.header("3. 문서 검색 요청 (하이브리드 지원)")
-            st.subheader("`/search` 엔드포인트")
-
+        with st.expander("3. 문서 검색 테스트"):
             with st.form("search_form"):
                 # 입력 필드: 쿼리 텍스트
-                index_name = st.text_input("**Index_Name**", key="index_name", placeholder="검색할 인덱스 이름 입력")
-                query_text = st.text_area("**검색 쿼리 (query_text)**", key="search_query_text", height=100, placeholder="검색할 내용을 입력하세요. 예: 새로운 에너지 정책의 주요 내용")
+                index_name = st.text_input("**Index_Name**", key="index_name", placeholder="프로젝트명")
+                query_text = st.text_area("**검색 쿼리 (query_text)**", key="search_query_text", height=100, placeholder="검색할 내용을 입력하세요")
                 
                 # 옵션 필드: size 및 min_score
                 col1, col2 = st.columns(2)

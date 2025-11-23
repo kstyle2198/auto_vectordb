@@ -1,164 +1,17 @@
-# from fastapi import APIRouter, HTTPException, UploadFile, File, Form, HTTPException
-# from pydantic import BaseModel, Field
-# from langchain_ollama import OllamaEmbeddings
-# from typing import List, Optional, Dict, Any
-# from process.elasticsearch_index import ElasticsearchIndexer # indexer.py 파일에 클래스가 있다고 가정
-
-# # --- 설정 및 초기화 ---
-
-# # ElasticsearchIndexer 인스턴스 초기화
-# # 실제 환경에 맞게 es_url과 index_name을 설정하세요.
-# try:
-#     # 이 인스턴스는 FastAPI 애플리케이션이 시작될 때 한 번만 생성됩니다.
-#     es_indexer = ElasticsearchIndexer(
-#         es_url="http://localhost:9200", 
-#         index_name="test_002"
-#         )
-# except Exception as e:
-#     # ES 연결 실패 시 초기화 오류 처리 (필요에 따라 더 상세히 구현)
-#     print(f"Elasticsearch Indexer initialization failed: {e}")
-#     es_indexer = None # 인덱서가 초기화되지 않으면 None으로 설정
-
-# es_api = APIRouter()
-# embed_model = OllamaEmbeddings(base_url="http://localhost:11434", model="bge-m3:latest")
-
-# # --- Pydantic 스키마 정의 ---
-
-# # 색인 요청을 위한 입력 모델
-# class IndexRequest(BaseModel):
-#     table_name: str
-#     hashed_filepath: str
-
-# # 문서 조회 응답 모델
-# class DocumentResponse(BaseModel):
-#     # 실제 문서의 필드에 맞게 조정해야 합니다.
-#     id: str
-#     page_content: str
-#     filename: str
-#     filepath: str
-#     # ... 기타 필드 ...
-#     # 응답 스키마가 복잡하다면, 그냥 dict로 반환하고 스키마 검증을 생략할 수도 있습니다.
-#     class Config:
-#         extra = "allow" # 예상치 못한 필드가 있어도 허용하도록 설정
-
-# # --- 엔드포인트 정의 ---
-
-# @es_api.post("/index/document", tags=["ElasticSearch"])
-# def index_document_by_path(request: IndexRequest):
-#     """
-#     주어진 table_name과 hashed_filepath를 사용하여 문서를 PostgreSQL에서 가져와
-#     Elasticsearch에 색인합니다.
-#     """
-#     if es_indexer is None:
-#         raise HTTPException(status_code=503, detail="Service Unavailable: Elasticsearch Indexer failed to initialize.")
-
-#     try:
-#         es_indexer.index_documents_by_hashed_filepath(
-#             table_name=request.table_name,
-#             hashed_filepath=request.hashed_filepath
-#         )
-#         return {"message": f"Indexing request sent for hashed_filepath: {request.hashed_filepath}"}
-#     except Exception as e:
-#         # 색인 중 발생한 예외 처리 (e.g., PostgreSQL 연결 오류 등)
-#         # 실제 index_documents_by_hashed_filepath 메서드에서 이미 로깅을 하고 있으므로,
-#         # 여기서는 일반적인 HTTP 500 오류를 반환합니다.
-#         print(f"Indexing error: {e}")
-#         raise HTTPException(status_code=500, detail=f"Failed to index document: {e}")
-
-# @es_api.get("/document/{hashed_filepath}", tags=["ElasticSearch"])
-# def get_document(hashed_filepath: str):
-#     """
-#     주어진 ID에 해당하는 문서를 Elasticsearch에서 조회합니다.
-#     (doc_id는 Elasticsearch 문서 ID, 즉 hashed_filepath와 동일)
-#     """
-#     if es_indexer is None:
-#         raise HTTPException(status_code=503, detail="Service Unavailable: Elasticsearch Indexer failed to initialize.")
-
-#     document = es_indexer.search_documents_by_hashed_filepath(hashed_filepath=hashed_filepath)
-    
-#     if document is None:
-#         # get_document_by_id에서 문서가 없으면 None을 반환하므로, 404 처리
-#         raise HTTPException(status_code=404, detail=f"Document with ID '{hashed_filepath}' not found.")
-    
-#     # DocumentResponse 스키마에 맞지 않아도 일단 반환 (dict)
-#     # 실제로는 DocumentResponse 스키마에 맞춰 검증하고 반환하는 것이 좋습니다.
-#     return document
-
-
-# class SearchRequest(BaseModel):
-#     """검색 요청 본문에 포함될 데이터 모델"""
-#     # 텍스트 검색어 (선택 사항)
-#     query_text: Optional[str] = Field(None, description="키워드 기반 검색을 위한 텍스트 검색어.")
-#     # 검색 파라미터
-#     size: int = Field(5, ge=1, le=100, description="반환할 최대 문서 수.")
-#     min_score: float = Field(0.5, ge=0.0, le=1.0, description="결과에 포함될 최소 관련성 점수.")
-
-
-# @es_api.post("/search", tags=["ElasticSearch"])
-# async def search_documents_endpoint(request: SearchRequest):
-#     """
-#     Elasticsearch에서 텍스트 또는 임베딩을 기반으로 문서를 검색합니다.
-
-#     **query_text** 또는 **query_embedding** 중 최소 하나를 제공해야 합니다.
-#     """
-    
-#     query_text = request.query_text
-#     query_embedding = embed_model.embed_query(query_text)
-#     size = request.size
-#     min_score = request.min_score
-
-#     # 필수 조건 검사
-#     if not query_text and not query_embedding:
-#         raise HTTPException(
-#             status_code=400,
-#             detail="검색을 위해서는 'query_text' 또는 'query_embedding' 중 최소 하나를 제공해야 합니다."
-#         )
-
-#     # 1024 차원 벡터 길이 검증 (임베딩이 제공된 경우)
-#     if query_embedding and len(query_embedding) != 1024:
-#         raise HTTPException(
-#             status_code=400,
-#             detail=f"제공된 임베딩 벡터의 차원이 {len(query_embedding)}입니다. 1024 차원 벡터가 필요합니다."
-#         )
-
-#     try:
-#         # 2. ElasticsearchIndexer의 search_documents 메서드 호출
-#         results = es_indexer.search_documents(
-#             query_text=query_text,
-#             query_embedding=query_embedding,
-#             size=size,
-#             min_score=min_score
-#             )
-        
-#         # 3. 결과 반환
-#         return {
-#             "query_text": query_text,
-#             "query_type": "Hybrid" if query_text and query_embedding else ("Text" if query_text else "Vector"),
-#             "total_hits": len(results),
-#             "results": results
-#         }
-
-#     except Exception as e:
-#         # 검색 중 발생한 예외 처리
-#         print(f"Search error: {e}")
-#         raise HTTPException(
-#             status_code=500,
-#             detail=f"검색 중 서버 오류가 발생했습니다: {e}"
-#         )
-
-
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status, Path
 from pydantic import BaseModel, Field
 from langchain_ollama import OllamaEmbeddings
-from typing import Optional
+from elasticsearch import Elasticsearch
+from typing import Optional, List
 from process.elasticsearch_index import ElasticsearchIndexer
 
 es_api = APIRouter()
+es = Elasticsearch("http://localhost:9200")
 embed_model = OllamaEmbeddings(base_url="http://localhost:11434", model="bge-m3:latest")
 
 
 # --- 공통: 요청마다 동적으로 Indexer 생성 ---
-def create_es_indexer(index_name: str) -> ElasticsearchIndexer:
+def create_es_indexer(index_name: str="test_01") -> ElasticsearchIndexer:
     try:
         return ElasticsearchIndexer(
             es_url="http://localhost:9200",
@@ -276,3 +129,69 @@ async def search_documents_endpoint(request: SearchRequest):
     except Exception as e:
         print(f"Search error: {e}")
         raise HTTPException(status_code=500, detail=f"검색 오류: {e}")
+    
+
+# --- Pydantic 모델 정의 (API 문서화 및 응답 형식을 위해) ---
+class IndexListResponse(BaseModel):
+    count: int
+    indices: List[str]
+
+class DeleteIndexResponse(BaseModel):
+    index_name: str
+    deleted: bool
+    message: str
+
+# --- Endpoints ---
+
+@es_api.get(
+    "/indices", 
+    response_model=IndexListResponse,
+    summary="전체 인덱스 목록 조회",
+    description="Elasticsearch 클러스터에 존재하는 모든 인덱스의 이름을 조회합니다.", tags=["ElasticSearch"]
+    )
+async def get_all_indices():
+    """
+    모든 Elasticsearch 인덱스 이름을 조회하여 반환합니다.
+    """
+    es_indexer = create_es_indexer()
+    indices_dict = es_indexer.get_all_index_names()
+    # indices_dict = es.indices.get_alias(index="*")
+    print(indices_dict)
+    index_names = list(indices_dict.keys())
+    
+    return {
+        "count": len(index_names),
+        "indices": indices_dict
+        }
+
+@es_api.delete(
+    "/indices/{index_name}", 
+    response_model=DeleteIndexResponse,
+    summary="특정 인덱스 삭제",
+    description="지정된 이름의 Elasticsearch 인덱스를 영구적으로 삭제합니다.", tags=["ElasticSearch"]
+    )
+async def delete_index(
+    index_name: str = Path(..., description="삭제할 인덱스의 이름", example="test_002")
+    ):
+    """
+    특정 인덱스를 삭제합니다.
+    
+    - **index_name**: 삭제할 인덱스 명
+    """
+    es_indexer = create_es_indexer(index_name=index_name)
+    # 인덱스 삭제 시도
+    is_deleted = es_indexer.delete_index_by_name(index_name)
+    
+    if is_deleted:
+        return {
+            "index_name": index_name,
+            "deleted": True,
+            "message": f"Index '{index_name}' successfully deleted."
+        }
+    else:
+        # 삭제 실패 (인덱스가 없거나 에러 발생) 시 404 에러 반환
+        # 보안 정책에 따라 에러 메시지를 다르게 줄 수 있습니다.
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Index '{index_name}' not found or could not be deleted."
+        )

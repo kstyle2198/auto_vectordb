@@ -80,6 +80,7 @@ async def upload_chunk(
     """
     try:
         # 최종 저장될 파일 경로
+        logger.info(f"Upload to ---> './docs/uploaded/{server_path}'")
         folder = f"./docs/uploaded/{server_path}"
         os.makedirs(folder, exist_ok=True)
         save_path = f"{folder}/{filename}"
