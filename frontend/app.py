@@ -1,3 +1,5 @@
+# streamlit run app.py --server.port 8502
+
 import os
 import json
 import base64
@@ -14,7 +16,7 @@ from utils.setlogger import setup_logger
 config = get_config()
 logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
-FASTAPI_BASEURL = "http://localhost:8000"
+FASTAPI_BASEURL = "http://localhost:8001"
 
 
 from utils.style import HOVERING_EFFECT
@@ -193,6 +195,7 @@ col_schema = [
 
 if __name__ == "__main__":
     st.title(":blue[Auto VectorDB]")
+    st.page_link(label="FastAPI Docs", page="http://localhost:8001/docs")
     st.markdown("---")
 
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -370,7 +373,6 @@ if __name__ == "__main__":
             with st.form("index_form"):
                 # 입력 필드
                 table_name = st.text_input("**Table Name(=index_name)**", key="index_table_name", placeholder="예: 프로젝트명")
-                # hashed_filepath = st.text_input("**Hashed Filepath (ID)**", key="index_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
                 
                 # 폼 제출 버튼
                 submit_index = st.form_submit_button("🚀 문서 색인 요청")

@@ -22,7 +22,6 @@ async def parse_pdf_by_path(
     lv2_cat: str = Form(...),   
     lv3_cat: Optional[str] = Form(""),
     lv4_cat: Optional[str] = Form(""),
-    remove_original: bool = Form(False)
     ):
     """
     이미 서버에 저장된 PDF 경로를 받아 페이지별 파싱
@@ -38,7 +37,6 @@ async def parse_pdf_by_path(
             lv2_cat=lv2_cat,
             lv3_cat=lv3_cat,
             lv4_cat=lv4_cat,
-            remove_original=remove_original
         )
 
         # Document 객체를 JSON 직렬화
