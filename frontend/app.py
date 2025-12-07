@@ -190,8 +190,9 @@ col_schema = [
     {"name": "updated_at", "type": "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"}
     ]
 
-
-
+if "task_ids" not in st.session_state: st.session_state.task_ids = []
+if "pending_results" not in st.session_state: st.session_state.pending_results = []
+if "success_results" not in st.session_state: st.session_state.success_results = []
 
 if __name__ == "__main__":
     st.title(":blue[Auto VectorDB]")
@@ -299,8 +300,8 @@ if __name__ == "__main__":
                                 data={
                                     "folder_path": folder_path,
                                     "remove_original": remove_original
-                                }
-                            )
+                                    }
+                                )
                             if response.status_code == 200:
                                 result = response.json()
                                 st.success(f"배치 처리 완료! - 총 {len(result)}개 문서")
@@ -308,6 +309,54 @@ if __name__ == "__main__":
                                 st.error(f"에러 발생: {response.status_code} - {response.text}")
                         except Exception as e:
                             st.error(f"서버 연결 실패: {e}")
+
+
+        with st.expander("Background Parsing"):
+
+            folder_path = st.text_input("폴더 경로를 입력하세요", "./docs/uploaded/프로젝트명", key="wererww")
+
+            if st.button("Task ID 초기화"):
+                st.session_state.task_ids = []
+                st.session_state.pending_results = []
+                st.session_state.success_results = []
+
+            if st.button("Background 처리 시작"):
+                
+                for file in requests.get(f"{FASTAPI_BASEURL}/list-files-stream", params={"folder_path": folder_path}, stream=True):
+                    file = file.decode("utf-8")
+                    file = json.loads(file)
+                    st.info(file)
+                    pdf_path = file["pdf_path"]
+                    response = requests.post(f"{FASTAPI_BASEURL}/background_parsing", json = {"pdf_path": pdf_path})
+                    data = response.json()
+                    logger.info(data)
+                    task_id = data.get("task_id")
+                    st.session_state.task_ids.append(task_id)
+                
+                st.info("All Parsing Tasks are Queued")
+
+            if st.button("Polling"):
+                st.session_state.pending_results = []
+                st.session_state.success_results = []
+                for id in st.session_state.task_ids:
+                    status_response = requests.get(f"{FASTAPI_BASEURL}/task_status/{id}")
+                    status_data = json.loads(status_response.text)
+                    if status_data not in st.session_state.pending_results and status_data["status"]!="SUCCESS" :
+                        st.session_state.pending_results.append(status_data)
+                    if status_data not in st.session_state.success_results and status_data["status"]=="SUCCESS" :
+                        st.session_state.success_results.append(status_data)
+
+            col1, col2 = st.columns(2)
+            with col1:
+                st.info(f"대기중인 작업: {len(st.session_state.pending_results)}")
+                with st.container(border=True, height=500):
+                    for p in st.session_state.pending_results:
+                        st.warning(p)
+            with col2:
+                st.info(f"성공한 작업: {len(st.session_state.success_results)}")
+                with st.container(border=True, height=500):
+                    for s in st.session_state.success_results:
+                        st.success(s)
     
     with col4:
         st.subheader(":green[Postgres 데이터 Insert]")

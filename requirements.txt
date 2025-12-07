@@ -44,6 +44,7 @@ fastapi-cli==0.0.16
 fastapi-cloud-cli==0.3.1
 filelock==3.20.0
 filetype==1.2.0
+flower==2.0.1
 fsspec==2025.10.0
 gitdb==4.0.12
 gitpython==3.1.45

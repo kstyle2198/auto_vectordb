@@ -31,6 +31,37 @@ from routers.es_index import es_api
 app.include_router(es_api)
 
 
+from celery.result import AsyncResult
+from worker import long_running_task
+from pydantic import BaseModel
+class ParsingRequest(BaseModel):
+    pdf_path: str
+
+@app.post("/background_parsing", tags=["Parser"])
+async def background_parsing(request: ParsingRequest):
+    result = long_running_task.delay(request.pdf_path)
+    return {
+        "message": f"Parsing {request.pdf_path} has been queued.",
+        "task_id": result.id,
+        "status": "queued"
+        }
+
+# ⭐️ 폴링 엔드포인트 추가
+@app.get("/task_status/{task_id}", tags=["Parser"])
+async def get_task_status(task_id: str):
+    """
+    Celery task_id로 상태와 결과를 조회하는 API
+    """
+    result = AsyncResult(task_id)
+
+    return {
+        "task_id": task_id,
+        "status": result.status,     # PENDING / STARTED / RETRY / FAILURE / SUCCESS
+        "result": result.result if result.successful() else None
+    }
+
+
+
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting FastAPI server...")

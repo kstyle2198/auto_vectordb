@@ -86,12 +86,10 @@ class DoclingParser:
         output_dir.mkdir(parents=True, exist_ok=True)
         return str(output_dir)
     
-    
     def _get_md5_string(self, text:str):
         """문자열의 MD5 해시 반환"""
         return hashlib.md5(text.encode()).hexdigest()
     
-
     def _get_embedding(self, text:str):
         return self.embed_model.embed_query(text)
 
@@ -229,7 +227,7 @@ class DoclingParser:
         
         print(f"문서 저장 완료: {output_path}")
 
-    def _list_files_recursive(self, folder_path: str):
+    def list_files_recursive(self, folder_path: str):
         """폴더 안의 파일을 재귀적으로 읽어서 제너레이터로 반환하는 함수"""
         for root, dirs, files in os.walk(folder_path):
             for file in files:
@@ -254,7 +252,7 @@ class DoclingParser:
             각 PDF의 Document 객체 리스트를 포함하는 리스트
         """
         folder_path = Path(folder_path)
-        pdf_files = self._list_files_recursive(folder_path=folder_path)
+        pdf_files = self.list_files_recursive(folder_path=folder_path)
         
         if not pdf_files:
             print("처리할 PDF 파일이 없습니다.")
@@ -287,6 +285,8 @@ class DoclingParser:
             self._clear_folder(folder_path=folder_path)
 
         return all_docs
+
+
 
 
 # 사용 예시

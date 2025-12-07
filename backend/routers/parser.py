@@ -1,7 +1,8 @@
 import os
+import json
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, HTTPException, Query
+from fastapi.responses import JSONResponse, StreamingResponse
 from typing import Optional
 from process.parsing import DoclingParser
 
@@ -49,6 +50,20 @@ async def parse_pdf_by_path(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@parser_api.get("/list-files-stream", tags=["Parser"])
+async def list_files_stream(folder_path: str = Query(...)):
+    """
+    폴더 내부의 모든 파일 경로를 스트리밍으로 하나씩 반환 (메모리 절약)
+    """
+
+    def file_streamer():
+        # 제너레이터를 직접 StreamingResponse에 연결
+        for filepath in parser.list_files_recursive(folder_path):
+            filepath = filepath.replace("\\", "/")
+            yield json.dumps({"pdf_path": filepath}) + "\n"
+
+    return StreamingResponse(file_streamer(), media_type="application/x-ndjson")
+
 @parser_api.post("/batch_parse_by_folder", tags=["Parser"])
 async def batch_parse_by_folder(
     folder_path: str = Form(...),
@@ -82,3 +97,4 @@ async def batch_parse_by_folder(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
