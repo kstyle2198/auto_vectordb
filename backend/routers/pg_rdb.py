@@ -47,11 +47,12 @@ class ColumnConfig(BaseModel):
     name: str
     type: str
 
-
+# 1. 딕셔너리 리스트를 ColumnConfig 객체 리스트로 변환
+columns_data = [ColumnConfig(**item) for item in pg_schema]
 
 class CreateTableRequest(BaseModel):
     table_name: str
-    columns: List[ColumnConfig] = pg_schema
+    columns: List[ColumnConfig] = columns_data
 
 
 @pg_api.post("/create_tables", summary="테이블 생성", tags=["Postgres"])

@@ -1,3 +1,4 @@
+
 pg_schema = [
     {'name': 'id', 'type': 'VARCHAR(300) NOT NULL'}, 
     {'name': 'page_content', 'type': 'TEXT NOT NULL'}, 

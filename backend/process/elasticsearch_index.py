@@ -2,6 +2,7 @@ import numpy as np
 from process.postgres import PostgresPipeline
 from elasticsearch import Elasticsearch, helpers
 from elasticsearch.helpers import BulkIndexError
+from elasticsearch import NotFoundError
 
 # 설정 및 로거 로드 (기존 코드를 따름)
 from utils.config import get_config
@@ -74,10 +75,15 @@ class ElasticsearchIndexer:
             return [ElasticsearchIndexer._convert_numpy_types(x) for x in obj]
         elif isinstance(obj, np.ndarray):
             return obj.astype(float).tolist()
-        elif isinstance(obj, (np.floating, np.float32, np.float64)):
+        elif isinstance(obj, (float, np.ndarray)) or np.isrealobj(obj):
             return float(obj)
-        elif isinstance(obj, (np.integer, np.int32, np.int64)):
+        elif isinstance(obj, (int, np.ndarray)) or np.isrealobj(obj):
             return int(obj)
+    
+        # elif isinstance(obj, (np.floating, np.float32, np.float64)) :
+        #     return float(obj)
+        # elif isinstance(obj, (np.integer, np.int32, np.int64)):
+        #     return int(obj)
         else:
             return obj
 
@@ -158,8 +164,8 @@ class ElasticsearchIndexer:
         try:
             # helpers.bulk를 사용하여 문서 일괄 색인
             successes, errors = helpers.bulk(self.es, self._generate_actions(rows), raise_on_error=False)
-            
-            if errors:
+            # errors가 리스트 형태이고 비어있지 않은지 확인
+            if isinstance(errors, list) and errors:
                  logger.warning(f"{len(errors)} document(s) failed to index. First error: {errors[0]}")
 
             logger.info(f"Successfully indexed {successes} out of {len(rows)} documents to Elasticsearch.")
@@ -201,8 +207,8 @@ class ElasticsearchIndexer:
             logger.info(f"Found {len(documents)} documents for hashed_filepath: {hashed_filepath}")
             
             return documents
-            
-        except self.es.exceptions.NotFoundError:
+        
+        except NotFoundError:
             # 인덱스가 존재하지 않는 경우
             logger.error(f"Index '{self.INDEX_NAME}' not found.")
             return []
@@ -212,7 +218,7 @@ class ElasticsearchIndexer:
 
 
 # 👇️ 요청하신 검색 메서드 추가
-    def search_documents(self, query_text: str = None, query_embedding: list = None, size: int = 10, min_score: float = 0.5):
+    def search_documents(self, query_text: str = "", query_embedding: list = [], size: int = 10, min_score: float = 0.5):
         """
         Elasticsearch에서 텍스트 또는 임베딩을 기반으로 문서를 검색합니다.
         
@@ -356,7 +362,8 @@ if __name__ == "__main__":
     # es.index_by_hashed_filepath(INDEX_NAME, test_key)
     # pass
 
-    # 조회 예시 사용
-    doc = es.get_document_by_id(test_key)
-    print(doc)
-    pass
+    # 2. 특정 패턴을 가진 인덱스 이름만 리스트로 추출
+
+  
+    index_list = es.get_all_index_names()
+    print(index_list)

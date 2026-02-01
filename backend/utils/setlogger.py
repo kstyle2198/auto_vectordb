@@ -40,7 +40,7 @@ class ColorFormatter(logging.Formatter):
         return f"{log_color}{message}{RESET_COLOR}"
 
 
-def setup_logger(log_name: str, level=logging.DEBUG) -> logging.Logger:
+def setup_logger(log_name: str, level:str=str(logging.DEBUG)) -> logging.Logger:
     """
     지정한 이름과 레벨로 로거(Logger)를 생성하고 반환합니다.
 
