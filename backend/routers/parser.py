@@ -21,8 +21,8 @@ async def parse_pdf_by_path(
     pdf_path: str = Form(...),
     lv1_cat: str = Form(...),
     lv2_cat: str = Form(...),   
-    lv3_cat: Optional[str] = Form(""),
-    lv4_cat: Optional[str] = Form(""),
+    lv3_cat: str = Form(""),
+    lv4_cat: str = Form(""),
     ):
     """
     이미 서버에 저장된 PDF 경로를 받아 페이지별 파싱

@@ -132,6 +132,7 @@ class DoclingParser:
         except Exception as e:
             print(f"페이지 {page_num} 처리 중 오류 발생: {e}")
             # 오류 발생 시 빈 문서 반환
+            str_filepath = str(filepath).replace("\\", "/")
             return Document(
                 page_content=first_sentence + "\n[이 페이지를 처리하는 중 오류가 발생했습니다.]",
                 metadata={
@@ -179,16 +180,16 @@ class DoclingParser:
             파싱된 Document 객체 리스트
         """
         # 경로 정규화
-        pdf_path = Path(pdf_path).resolve()
-        filename = pdf_path.name
+        pdf_path1 = Path(pdf_path).resolve()
+        filename = pdf_path1.name
         
-        if not pdf_path.exists():
+        if not pdf_path1.exists():
             raise FileNotFoundError(f"PDF 파일을 찾을 수 없습니다: {pdf_path}")
 
         # 초기 문장 생성
         enable_cats = [c for c in [lv1_cat, lv2_cat, lv3_cat, lv4_cat] if c] # 공백 Cat 제거
         first_sentence_cats = ",".join(enable_cats)
-        first_sentence = f"This page explains {pdf_path.stem} that belongs to {first_sentence_cats} categories.\n"
+        first_sentence = f"This page explains {pdf_path1.stem} that belongs to {first_sentence_cats} categories.\n"
 
         try:
             # 변환기 설정
@@ -251,7 +252,7 @@ class DoclingParser:
         Returns:
             각 PDF의 Document 객체 리스트를 포함하는 리스트
         """
-        folder_path = Path(folder_path)
+        folder_path = str(Path(folder_path))
         pdf_files = self.list_files_recursive(folder_path=folder_path)
         
         if not pdf_files:

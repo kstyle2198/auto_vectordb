@@ -170,9 +170,7 @@ async def get_all_indices():
     summary="특정 인덱스 삭제",
     description="지정된 이름의 Elasticsearch 인덱스를 영구적으로 삭제합니다.", tags=["ElasticSearch"]
     )
-async def delete_index(
-    index_name: str = Path(..., description="삭제할 인덱스의 이름", example="test_002")
-    ):
+async def delete_index(index_name: str = Path(..., description="삭제할 인덱스의 이름")):
     """
     특정 인덱스를 삭제합니다.
     
