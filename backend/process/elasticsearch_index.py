@@ -327,6 +327,26 @@ class ElasticsearchIndexer:
         except Exception as e:
             logger.error(f"Error fetching all index names: {e}")
             return []
+        
+    def get_index_names_by_prefix(self, prefix: str) -> list[str]:
+        """
+        Elasticsearch 클러스터에서 특정 prefix를 가진 인덱스 이름만 반환합니다.
+        """
+        try:
+            # ES 단에서 prefix 필터링
+            indices_dict = self.es.indices.get_alias(index=f"{prefix}*")
+            index_names = list(indices_dict.keys())
+
+            logger.info(
+                f"Retrieved {len(index_names)} indices with prefix '{prefix}'."
+            )
+            return index_names
+
+        except Exception as e:
+            logger.error(
+                f"Error fetching index names with prefix '{prefix}': {e}"
+            )
+            return []
 
     def delete_index_by_name(self, index_name: str):
         """

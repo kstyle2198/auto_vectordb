@@ -5,6 +5,11 @@ from elasticsearch import Elasticsearch
 from typing import Optional, List
 from process.elasticsearch_index import ElasticsearchIndexer
 
+from utils.config import get_config
+from utils.setlogger import setup_logger
+config = get_config()
+logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
+
 es_api = APIRouter()
 es = Elasticsearch("http://localhost:9200")
 embed_model = OllamaEmbeddings(base_url="http://localhost:11434", model="bge-m3:latest")
@@ -18,7 +23,7 @@ def create_es_indexer(index_name: str="test_01") -> ElasticsearchIndexer:
             index_name=index_name
         )
     except Exception as e:
-        print(f"Elasticsearch Indexer initialization failed: {e}")
+        logger.error(f"Elasticsearch Indexer initialization failed: {e}")
         raise HTTPException(status_code=503, detail="Elasticsearch 연결 실패")
 
 
@@ -65,7 +70,7 @@ def index_document_by_path(request: IndexRequest):
             "hashed_filepath": request.hashed_filepath
         }
     except Exception as e:
-        print(f"Indexing error: {e}")
+        logger.error(f"Indexing error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to index: {e}")
 
 
@@ -127,7 +132,7 @@ async def search_documents_endpoint(request: SearchRequest):
         }
 
     except Exception as e:
-        print(f"Search error: {e}")
+        logger.error(f"Search error: {e}")
         raise HTTPException(status_code=500, detail=f"검색 오류: {e}")
     
 
@@ -142,27 +147,38 @@ class DeleteIndexResponse(BaseModel):
     message: str
 
 # --- Endpoints ---
-
+from fastapi import Query
 @es_api.get(
-    "/indices", 
+    "/indices",
     response_model=IndexListResponse,
-    summary="전체 인덱스 목록 조회",
-    description="Elasticsearch 클러스터에 존재하는 모든 인덱스의 이름을 조회합니다.", tags=["ElasticSearch"]
+    summary="인덱스 목록 조회",
+    description="Elasticsearch 클러스터의 인덱스 목록을 조회합니다. prefix로 필터링할 수 있습니다.",
+    tags=["ElasticSearch"],
+)
+async def get_all_indices(
+    prefix: Optional[str] = Query(
+        default=None,
+        description="조회할 인덱스 prefix (예: ship_, log_, kb_ 등)"
     )
-async def get_all_indices():
+):
     """
-    모든 Elasticsearch 인덱스 이름을 조회하여 반환합니다.
+    Elasticsearch 인덱스 이름을 조회하여 반환합니다.
     """
     es_indexer = create_es_indexer()
-    indices_dict = es_indexer.get_all_index_names()
-    # indices_dict = es.indices.get_alias(index="*")
-    print(indices_dict)
-    index_names = list(indices_dict.keys())
-    
+
+    if prefix:
+        index_names = es_indexer.get_index_names_by_prefix(prefix)
+    else:
+        # 기존 전체 조회 로직 유지
+        indices_dict = es_indexer.get_all_index_names()
+        index_names = list(indices_dict.keys())
+
+    logger.info(f"Retrieved {len(index_names)} indices")
+
     return {
         "count": len(index_names),
-        "indices": indices_dict
-        }
+        "indices": index_names
+    }
 
 @es_api.delete(
     "/indices/{index_name}", 
