@@ -46,7 +46,7 @@ class DoclingParser:
             output_base_path: 파싱된 문서를 저장할 기본 경로
         """
         self.output_base_path = output_base_path
-        self.embed_model=OllamaEmbeddings(base_url="http://localhost:11434", model="bge-m3:latest")
+        self.embed_model=OllamaEmbeddings(base_url="http://localhost:11434", model="qwen3-embedding:4b")
         self._ensure_output_directory()
 
     def _ensure_output_directory(self):
@@ -93,7 +93,7 @@ class DoclingParser:
     def _get_embedding(self, text:str):
         return self.embed_model.embed_query(text)
 
-    def _process_single_page(self, loaded_docs, page_num: int, filename: str, filepath:str, lv1_cat: str, lv2_cat: str, lv3_cat: str, lv4_cat: str, first_sentence: str) -> Document:
+    def _process_single_page(self, loaded_docs, page_num: int, filename: str, filepath:str, lv1_cat: str, lv2_cat: str, lv3_cat: str, lv4_cat: str) -> Document:
         """단일 페이지 처리"""
         try:
             # Docling으로 마크다운 추출
@@ -102,7 +102,6 @@ class DoclingParser:
             # 텍스트 정제
             docling_text = docling_text.replace("<!-- image -->", "")
             docling_text = self.normalize_newlines(docling_text)
-            docling_text = first_sentence + docling_text
 
             str_filepath = str(filepath).replace("\\", "/")
             hashed_filename = self._get_md5_string(filename)
@@ -115,6 +114,8 @@ class DoclingParser:
                 page_content=docling_text,
                 metadata={
                     'id': str(uuid4()),
+                    'page_type':"",
+                    "global_context":"",
                     'filename': filename,
                     'filepath': str_filepath,
                     'hashed_filename': hashed_filename,
@@ -134,9 +135,11 @@ class DoclingParser:
             # 오류 발생 시 빈 문서 반환
             str_filepath = str(filepath).replace("\\", "/")
             return Document(
-                page_content=first_sentence + "\n[이 페이지를 처리하는 중 오류가 발생했습니다.]",
+                page_content="\n[이 페이지를 처리하는 중 오류가 발생했습니다.]",
                 metadata={
                     'id': str(uuid4()),
+                    'page_type':"",
+                    "global_context":"",
                     'filename': filename,
                     'filepath': str_filepath,
                     'hashed_filename': "",
@@ -186,11 +189,6 @@ class DoclingParser:
         if not pdf_path1.exists():
             raise FileNotFoundError(f"PDF 파일을 찾을 수 없습니다: {pdf_path}")
 
-        # 초기 문장 생성
-        enable_cats = [c for c in [lv1_cat, lv2_cat, lv3_cat, lv4_cat] if c] # 공백 Cat 제거
-        first_sentence_cats = ",".join(enable_cats)
-        first_sentence = f"This page explains {pdf_path1.stem} that belongs to {first_sentence_cats} categories.\n"
-
         try:
             # 변환기 설정
             converter = self._setup_converter()
@@ -203,7 +201,7 @@ class DoclingParser:
             # 페이지별 처리
             docs = []
             for page_num in tqdm(range(total_pages), desc=f"파싱 중 - {filename}"):
-                doc = self._process_single_page(loaded_docs, page_num, filename, pdf_path, lv1_cat, lv2_cat, lv3_cat, lv4_cat, first_sentence)
+                doc = self._process_single_page(loaded_docs, page_num, filename, pdf_path, lv1_cat, lv2_cat, lv3_cat, lv4_cat)
                 docs.append(doc)
                 time.sleep(0.1)  # 시스템 부하 방지
 

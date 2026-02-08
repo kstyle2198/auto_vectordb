@@ -22,7 +22,7 @@ class PostgresPipeline:
         """데이터베이스 연결 정보를 초기화합니다."""
         self.db_config = {
             "host": host,
-            "database": database,
+            "dbname": database,
             "user": user,
             "password": password
         }
@@ -32,6 +32,15 @@ class PostgresPipeline:
         try:
             logger.info("START - POSTGRESS DB CONNECTION")
             conn = psycopg2.connect(**self.db_config)
+            # return conn
+        
+            # CREATE EXTENSION 은 트랜잭션 밖에서 실행해야 함
+            conn.autocommit = True
+
+            with conn.cursor() as cur:
+                cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+            logger.info("pgvector extension is ready")
             return conn
         except psycopg2.Error as e:
             logger.error(f"CONNECTION ERROR: {e}")

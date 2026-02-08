@@ -11,7 +11,7 @@ class HybridSearch:
         self, 
         es_url: str = "http://localhost:9200", 
         ollama_url: str = "http://localhost:11434", 
-        model_name: str = "bge-m3:latest",
+        model_name: str = "qwen3-embedding:4b",
         spacy_model_path: str = "D:\\models\\en_core_web_sm"
     ):
         # 1. 초기화: ES, Embedding, NLP 모델 로드

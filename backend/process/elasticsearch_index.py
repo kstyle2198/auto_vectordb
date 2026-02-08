@@ -39,7 +39,7 @@ class ElasticsearchIndexer:
                     "lv4_cat": { "type": "keyword" },
                     "embeddings": {
                         "type": "dense_vector",
-                        "dims": 1024
+                        "dims": 2560
                     },
                     "created_at": { "type": "date" },
                     "updated_at": { "type": "date" }
@@ -79,11 +79,6 @@ class ElasticsearchIndexer:
             return float(obj)
         elif isinstance(obj, (int, np.ndarray)) or np.isrealobj(obj):
             return int(obj)
-    
-        # elif isinstance(obj, (np.floating, np.float32, np.float64)) :
-        #     return float(obj)
-        # elif isinstance(obj, (np.integer, np.int32, np.int64)):
-        #     return int(obj)
         else:
             return obj
 
@@ -227,7 +222,7 @@ class ElasticsearchIndexer:
         
         Args:
             query_text (str, optional): 일반 텍스트 검색어. Defaults to None.
-            query_embedding (list, optional): 벡터 검색을 위한 1024차원 임베딩 리스트. Defaults to None.
+            query_embedding (list, optional): 벡터 검색을 위한 4096차원 임베딩 리스트. Defaults to None.
             size (int, optional): 반환할 최대 문서 수. Defaults to 10.
             min_score (float, optional): 최소 점수 임계값. Defaults to 0.5.
             
@@ -266,8 +261,8 @@ class ElasticsearchIndexer:
         
         # 2. 벡터 검색 쿼리 (Query Embedding)
         if query_embedding:
-            if len(query_embedding) != 1024:
-                logger.error(f"Embedding must be 1024 dimensions, got {len(query_embedding)}")
+            if len(query_embedding) != 4096:
+                logger.error(f"Embedding must be 4096 dimensions, got {len(query_embedding)}")
                 return []
             
             # kNN 섹션에 dense_vector 검색 추가
