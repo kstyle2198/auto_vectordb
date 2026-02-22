@@ -39,7 +39,7 @@ class ElasticsearchIndexer:
                     "lv4_cat": { "type": "keyword" },
                     "embeddings": {
                         "type": "dense_vector",
-                        "dims": 2560
+                        "dims": 1024
                     },
                     "created_at": { "type": "date" },
                     "updated_at": { "type": "date" }
