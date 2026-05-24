@@ -106,7 +106,7 @@ class DoclingParser:
             str_filepath = str(filepath).replace("\\", "/")
             hashed_filename = self._get_md5_string(filename)
             hashed_filepath = self._get_md5_string(str(filepath))
-            hashed_page_content = self._get_md5_string(docling_text)
+            hashed_content = self._get_md5_string(docling_text)
             embeddings = self._get_embedding(docling_text)
 
             # Document 객체 생성
@@ -117,16 +117,15 @@ class DoclingParser:
                     'page_type':"",
                     "global_context":"",
                     'filename': filename,
+                    'page': str(page_num),
                     'filepath': str_filepath,
-                    'hashed_filename': hashed_filename,
-                    'hashed_filepath': hashed_filepath,
-                    'hashed_page_content': hashed_page_content,
+                    'hashed_content': hashed_content,
                     'lv1_cat': lv1_cat,
                     'lv2_cat': lv2_cat,
                     'lv3_cat': lv3_cat,
                     'lv4_cat': lv4_cat,
-                    'embeddings': list(embeddings),
-                    'page': str(page_num),
+                    'dense_embeddings': list(embeddings),
+                    'sparse_embeddings': list(embeddings),
                     'status': 'success'
                     }
                 )

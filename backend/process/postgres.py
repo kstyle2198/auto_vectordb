@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 import pickle
 import psycopg2
@@ -161,9 +163,9 @@ class PostgresPipeline:
                         CREATE UNIQUE INDEX IF NOT EXISTS {}
                         ON {} ({})
                     """).format(
-                        sql.Identifier(f"{table_name}_hashed_file_uidx"),
+                        sql.Identifier(f"{table_name}_hashed_content_uidx"),
                         self._table_identifier(table_name),
-                        sql.Identifier("hashed_file")
+                        sql.Identifier("hashed_content")
                     )
                 )
 
@@ -310,13 +312,18 @@ class PostgresPipeline:
             docs = pickle.load(f)
 
         # 컬럼 이름을 SQL 쿼리 형식으로 변환
-        columns = ['id', 'page_content', 'filename', 'filepath','hashed_filename', 'hashed_filepath', 'hashed_page_content',
-                    'page', 'lv1_cat', 'lv2_cat', 'lv3_cat', 'lv4_cat', 'embeddings', 'created_at', 'updated_at']
+        columns = ['id', 'hashed_content', 'page_content', 'metadata','dense_embeddings', 'sparse_embeddings', 'created_at', 'updated_at']
         columns_sql = ", ".join(columns)
         placeholders = ", ".join(["%s"] * len(columns))
         
         # SQL 쿼리 생성
-        sql = f"INSERT INTO {self.schema_name}.{table_name} ({columns_sql}) VALUES ({placeholders})"
+        sql = f"""
+        INSERT INTO {self.schema_name}.{table_name}
+        ({columns_sql})
+        VALUES ({placeholders})
+        ON CONFLICT (hashed_content) DO NOTHING
+        """
+        
         try:
             logger.info("START - INSERT DATA")
             # 데이터베이스 연결
@@ -325,25 +332,20 @@ class PostgresPipeline:
 
             # Convert to dictionary
             data = [{"page_content": doc.page_content,"metadata": doc.metadata} for doc in docs]
-            # print(len(data))
 
             # 데이터 정규화
             normalized = []
             for row in tqdm(data):
+                exclude_keys = ["hashed_content", "dense_embeddings", "sparse_embeddings", "status"]
+                filtered_metadata = {k: v for k, v in row["metadata"].items() if k not in exclude_keys}
+
                 new_row = [
                     row["metadata"].get("id"),
+                    row["metadata"].get("hashed_content"),
                     row.get("page_content"),
-                    row["metadata"].get("filename"),
-                    row["metadata"].get("filepath"),
-                    row["metadata"].get("hashed_filename"),
-                    row["metadata"].get("hashed_filepath"),
-                    row["metadata"].get("hashed_page_content"),
-                    row["metadata"].get("page"),
-                    row["metadata"].get("lv1_cat"),
-                    row["metadata"].get("lv2_cat"),
-                    row["metadata"].get("lv3_cat"),
-                    row["metadata"].get("lv4_cat"),
-                    row["metadata"].get("embeddings"),
+                    filtered_metadata,
+                    row["metadata"].get("dense_embeddings"),
+                    row["metadata"].get("sparse_embeddings"),
                     row.get("created_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")),
                     row.get("updated_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
                     ]
@@ -393,17 +395,17 @@ class PostgresPipeline:
             if conn is not None:
                 conn.close()
 
-    def get_row_by_hashed_filepath(self, table_name, hashed_filepath):
+    def get_row_by_hashed_contentpath(self, table_name, hashed_contentpath):
         """
-        PostgreSQL에서 특정 hashed_filepath의 데이터를 조회하는 함수
+        PostgreSQL에서 특정 hashed_contentpath의 데이터를 조회하는 함수
         """
         conn = None
         try:
             conn = self._get_db_connection()
             cur = conn.cursor()
 
-            query = f"SELECT * FROM {self.schema_name}.{table_name} WHERE hashed_filepath = %s"
-            cur.execute(query, (hashed_filepath,))
+            query = f"SELECT * FROM {self.schema_name}.{table_name} WHERE hashed_contentpath = %s"
+            cur.execute(query, (hashed_contentpath,))
             
             result = cur.fetchall()
             return result
@@ -415,16 +417,16 @@ class PostgresPipeline:
             if conn:
                 conn.close()
     
-    def get_unique_hashed_filepath(self, table_name):
+    def get_unique_hashed_contentpath(self, table_name):
         """
-        PostgreSQL에서 특정 hashed_filepath 데이터만 조회하는 함수 (중복 제거)
+        PostgreSQL에서 특정 hashed_contentpath 데이터만 조회하는 함수 (중복 제거)
         """
         conn = None
         try:
             conn = self._get_db_connection()
             cur = conn.cursor()
 
-            query = f"SELECT hashed_filepath FROM {self.schema_name}.{table_name}"
+            query = f"SELECT hashed_contentpath FROM {self.schema_name}.{table_name}"
             cur.execute(query)
             
             rows = cur.fetchall()
