@@ -1,6 +1,7 @@
 import json
 import pickle
 import psycopg2
+from psycopg2 import sql
 from psycopg2.extras import execute_batch
 import pandas as pd
 from typing import List, Dict, Any, Optional
@@ -10,7 +11,6 @@ import sys
 from pathlib import Path
 utils_path = Path(__file__).parent.parent
 sys.path.append(str(utils_path))
-# print(utils_path)
 
 from utils.config import get_config
 from utils.setlogger import setup_logger
@@ -18,8 +18,10 @@ config = get_config()
 logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 class PostgresPipeline:
-    def __init__(self, host="localhost", database="mydb", user=config.POSTGRES_USER, password=config.POSTGRES_PW):
+    def __init__(self, host=config.POSTGRES_HOST, database=config.POSTGRES_DB, user=config.POSTGRES_USER, password=config.POSTGRES_PW, schema_name: str = "test01"):
         """데이터베이스 연결 정보를 초기화합니다."""
+
+        self.schema_name = schema_name
         self.db_config = {
             "host": host,
             "dbname": database,
@@ -27,132 +29,139 @@ class PostgresPipeline:
             "password": password
         }
 
+    def _ensure_schema_exists(self, conn):
+        """스키마가 없으면 생성"""
+        with conn.cursor() as cur:
+            cur.execute(
+                sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(
+                    sql.Identifier(self.schema_name)
+                )
+            )
+        conn.commit()
+
     def _get_db_connection(self):
-        """데이터베이스 연결을 반환합니다."""
+        """데이터베이스 연결 반환"""
         try:
-            logger.info("START - POSTGRESS DB CONNECTION")
+            logger.info("START - POSTGRES DB CONNECTION")
+
             conn = psycopg2.connect(**self.db_config)
-            # return conn
-        
-            # CREATE EXTENSION 은 트랜잭션 밖에서 실행해야 함
             conn.autocommit = True
 
             with conn.cursor() as cur:
                 cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
 
+            self._ensure_schema_exists(conn)
+
             logger.info("pgvector extension is ready")
+
             return conn
+
         except psycopg2.Error as e:
             logger.error(f"CONNECTION ERROR: {e}")
             raise
+    
+    def _table_identifier(self, table_name: str):
+        """schema.table Identifier 생성"""
+        return sql.Identifier(self.schema_name, table_name)
 
     def get_all_tables(self):
-        """데이터베이스의 모든 테이블 이름을 조회합니다."""
+        """현재 스키마의 모든 테이블 조회"""
         conn = None
+
         try:
-            logger.info("START - GET TABLE NAMES")
-            # DB 연결
             conn = self._get_db_connection()
-            cur = conn.cursor()
 
-            # 모든 테이블 이름 조회 (시스템 테이블 제외)
-            query = """
-            SELECT table_name 
-            FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            ORDER BY table_name;
-            """
-            
-            cur.execute(query)
-            tables = cur.fetchall()
+            with conn.cursor() as cur:
+                query = """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = %s
+                ORDER BY table_name;
+                """
 
-            return [table[0] for table in tables]
+                cur.execute(query, (self.schema_name,))
+                tables = cur.fetchall()
 
-        except (Exception, psycopg2.DatabaseError) as error:
-            logger.error("오류 발생:", error)
+            return [t[0] for t in tables]
+
+        except Exception as e:
+            logger.error(f"GET TABLE ERROR: {e}")
             return []
+
         finally:
-            if conn is not None:
-                cur.close()
+            if conn:
                 conn.close()
 
     def drop_table(self, table_name: str):
-        """지정된 테이블을 삭제합니다."""
         conn = None
+
         try:
-            logger.info("DROP TABLE")
             conn = self._get_db_connection()
-            cursor = conn.cursor()
-            
-            # 테이블 삭제 SQL 실행
-            drop_query = f"DROP TABLE IF EXISTS {table_name} CASCADE;"
-            cursor.execute(drop_query)
+
+            query = sql.SQL(
+                "DROP TABLE IF EXISTS {} CASCADE"
+            ).format(
+                self._table_identifier(table_name)
+            )
+
+            with conn.cursor() as cur:
+                cur.execute(query)
+
             conn.commit()
-            
-            logger.info(f"테이블 '{table_name}'이(가) 성공적으로 삭제되었습니다.")
-            
-        except psycopg2.Error as e:
+
+        except Exception as e:
+            logger.error(f"DROP TABLE ERROR: {e}")
+
             if conn:
                 conn.rollback()
-            logger.error(f"테이블 삭제 오류: {e}")
-            raise
+
         finally:
             if conn:
-                cursor.close()
                 conn.close()
 
-    def create_table(self, table_name: str, columns_config: List[Dict[str, str]]):
-        """
-        PostgreSQL 데이터베이스에 새로운 테이블을 생성합니다.
-        
-        Args:
-            table_name (str): 생성할 테이블 이름
-            columns_config (List[Dict]): 컬럼 구성 정보
-                예: [
-                    {"name": "id", "type": "SERIAL PRIMARY KEY"},
-                    {"name": "name", "type": "VARCHAR(100) NOT NULL"},
-                    {"name": "created_at", "type": "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"}
-                ]
-        """
+    def create_table(self, table_name: str, columns_config: list):
         conn = None
-        try:
-            logger.info("CREATE TABLE")
-            # 데이터베이스 연결
-            conn = self._get_db_connection()
-            cur = conn.cursor()
 
-            # 컬럼 정의 생성
-            column_definitions = []
+        try:
+            conn = self._get_db_connection()
+
+            column_sql_list = []
+
             for column in columns_config:
-                column_definitions.append(f"{column['name']} {column['type']}")
-            
-            columns_sql = ",\n                ".join(column_definitions)
+                column_sql_list.append(
+                    sql.SQL("{} {}").format(
+                        sql.Identifier(column["name"]),
+                        sql.SQL(column["type"])
+                    )
+                )
 
-            # 실행할 SQL 쿼리 (테이블 생성)
-            create_table_query = f"""
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                {columns_sql}
-            );
-            """
+            create_query = sql.SQL("""
+                CREATE TABLE IF NOT EXISTS {} (
+                    {}
+                )
+            """).format(
+                self._table_identifier(table_name),
+                sql.SQL(", ").join(column_sql_list)
+            )
 
-            # SQL 쿼리 실행
-            cur.execute(create_table_query)
+            with conn.cursor() as cur:
+                cur.execute(create_query)
 
-            # 변경사항을 데이터베이스에 커밋(commit)
             conn.commit()
 
-            logger.info(f"'{table_name}' 테이블이 성공적으로 생성되었습니다.")
+            logger.info(
+                f"{self.schema_name}.{table_name} 생성 완료"
+            )
 
-        except (Exception, psycopg2.DatabaseError) as error:
-            logger.error("Error while creating PostgreSQL table", error)
+        except Exception as e:
+            logger.error(f"CREATE TABLE ERROR: {e}")
+
             if conn:
                 conn.rollback()
+
         finally:
-            # 연결 종료
-            if conn is not None:
-                cur.close()
+            if conn:
                 conn.close()
-                logger.info("PostgreSQL connection is closed.")
 
     def _reform_csv_data(self, csv_path: str):
         """엑셀 데이터를 재구성합니다."""
@@ -193,7 +202,7 @@ class PostgresPipeline:
             placeholders = ", ".join(["%s"] * len(columns))
             
             # SQL 쿼리 생성
-            sql = f"INSERT INTO {table_name} ({columns_sql}) VALUES ({placeholders})"
+            sql = f"INSERT INTO {self.schema_name}.{table_name} ({columns_sql}) VALUES ({placeholders})"
 
             # Data Reform
             data = self._reform_csv_data(csv_path=csv_path)
@@ -249,7 +258,7 @@ class PostgresPipeline:
         placeholders = ", ".join(["%s"] * len(columns))
         
         # SQL 쿼리 생성
-        sql = f"INSERT INTO {table_name} ({columns_sql}) VALUES ({placeholders})"
+        sql = f"INSERT INTO {self.schema_name}.{table_name} ({columns_sql}) VALUES ({placeholders})"
         try:
             logger.info("START - INSERT DATA")
             # 데이터베이스 연결
@@ -309,10 +318,10 @@ class PostgresPipeline:
 
             # SELECT 쿼리 생성
             if limit:
-                query = f"SELECT * FROM {table_name} ORDER BY {order_by} LIMIT %s;"
+                query = f"SELECT * FROM {self.schema_name}.{table_name} ORDER BY {order_by} LIMIT %s;"
                 cur.execute(query, (limit,))
             else:
-                query = f"SELECT * FROM {table_name} ORDER BY {order_by};"
+                query = f"SELECT * FROM {self.schema_name}.{table_name} ORDER BY {order_by};"
                 cur.execute(query)
 
             # 조회된 모든 데이터를 한 번에 가져오기
@@ -324,7 +333,6 @@ class PostgresPipeline:
             return []
         finally:
             if conn is not None:
-                cur.close()
                 conn.close()
 
     def get_row_by_hashed_filepath(self, table_name, hashed_filepath):
@@ -336,7 +344,7 @@ class PostgresPipeline:
             conn = self._get_db_connection()
             cur = conn.cursor()
 
-            query = f"SELECT * FROM {table_name} WHERE hashed_filepath = %s"
+            query = f"SELECT * FROM {self.schema_name}.{table_name} WHERE hashed_filepath = %s"
             cur.execute(query, (hashed_filepath,))
             
             result = cur.fetchall()
@@ -358,7 +366,7 @@ class PostgresPipeline:
             conn = self._get_db_connection()
             cur = conn.cursor()
 
-            query = f"SELECT hashed_filepath FROM {table_name}"
+            query = f"SELECT hashed_filepath FROM {self.schema_name}.{table_name}"
             cur.execute(query)
             
             rows = cur.fetchall()
@@ -382,7 +390,7 @@ class PostgresPipeline:
             cur = conn.cursor()
 
             # DELETE 쿼리 실행
-            delete_query = f"DELETE FROM {table_name} WHERE {id_column} = %s;"
+            delete_query = f"DELETE FROM {self.schema_name}.{table_name} WHERE {id_column} = %s;"
             cur.execute(delete_query, (record_id,))
 
             # 삭제된 행 수 확인
@@ -392,9 +400,9 @@ class PostgresPipeline:
             conn.commit()
 
             if deleted_rows > 0:
-                logger.info(f"{table_name} 테이블에서 {id_column} {record_id}인 레코드가 성공적으로 삭제되었습니다.")
+                logger.info(f"{self.schema_name}.{table_name} 테이블에서 {id_column} {record_id}인 레코드가 성공적으로 삭제되었습니다.")
             else:
-                logger.warning(f"{table_name} 테이블에서 {id_column} {record_id}인 레코드를 찾을 수 없습니다.")
+                logger.warning(f"{self.schema_name}.{table_name} 테이블에서 {id_column} {record_id}인 레코드를 찾을 수 없습니다.")
 
         except (Exception, psycopg2.DatabaseError) as error:
             logger.error("오류 발생:", error)
@@ -403,7 +411,6 @@ class PostgresPipeline:
                 conn.rollback()
         finally:
             if conn is not None:
-                cur.close()
                 conn.close()
         
         return deleted_rows
@@ -411,8 +418,8 @@ class PostgresPipeline:
 
 if __name__ == "__main__":
 
-    pg = PostgresPipeline()
-    pickle_path = "D:/auto_vectordb/backend/docs/project01/cat_01/cat_01_01/FWG.pkl"
-    pg.insert_data_from_pickle(table_name="pjt_001", pickle_path=pickle_path)
+    # pg = PostgresPipeline(schema_name="test01")
+    # pickle_path = "D:/auto_vectordb/backend/docs/project01/cat_01/cat_01_01/FWG.pkl"
+    # pg.insert_data_from_pickle(table_name="pjt_001", pickle_path=pickle_path)
     pass
 
