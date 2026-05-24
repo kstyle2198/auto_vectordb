@@ -7,7 +7,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI()
+from core.lifespan import lifespan
+# ---------------------------------------------------
+# FastAPI 앱
+# ---------------------------------------------------
+app = FastAPI(title="Auto VectorDB API",  lifespan=lifespan,)
 
 app.add_middleware(
     CORSMiddleware,

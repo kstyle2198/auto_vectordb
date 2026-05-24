@@ -6,12 +6,13 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiofiles>=25.1.0",
-    "celery>=5.6.3",
+    "celery[flower]>=5.6.3",
     "docling>=2.81.0",
     "easyocr>=1.7.2",
     "elasticsearch>=9.3.0",
     "fastapi[standard]>=0.136.3",
     "flagembedding>=1.4.0",
+    "flower>=2.0.1",
     "langchain>=1.2.13",
     "langchain-ollama>=1.1.0",
     "nltk>=3.9.4",

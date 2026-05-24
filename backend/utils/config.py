@@ -10,6 +10,10 @@ class BaseConfig:
     REDIS_BACKEND_URL: str = os.getenv("RESULT_BACKEND", "redis://localhost:6379/1")
     REDIS_PUBSUB_URL: str = os.getenv("REDIS_PUBSUB_URL", "redis://localhost:6379/2")
 
+    EMBED_MODEL_PATH: str = os.getenv("EMBED_MODEL_PATH", "D:/models/bge-m3")
+
+    ES_URL: str = os.getenv("ES_URL", "http://localhost:9200")
+
     POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "localhost")
     POSTGRES_DB: str = os.getenv("POSTGRES_DB", "mydb")
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "admin")

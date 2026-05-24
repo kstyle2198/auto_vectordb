@@ -29,6 +29,8 @@ from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
 
 from collections import defaultdict
 
+from core.dependencies import get_embedding_model
+
 class DoclingParser:
     """PDF 문서를 Docling을 사용하여 파싱하는 클래스"""
     
@@ -42,18 +44,6 @@ class DoclingParser:
         ocr_options=EasyOcrOptions(lang=["en", "ko"])
         )
     
-    # Singleton 모델 - Thread-safe Singleton 변수
-    _model = None
-    _model_lock = Lock()
-    @classmethod
-    def get_model(cls):
-        # Double-checked locking
-        if cls._model is None:
-            with cls._model_lock:
-                if cls._model is None:
-                    cls._model = BGEM3FlagModel("D:/models/bge-m3", use_fp16=True)
-        return cls._model
-    
     def __init__(self, output_base_path: str = "../docs"):
         """
         Args:
@@ -61,8 +51,16 @@ class DoclingParser:
         """
 
         self.output_base_path = output_base_path
-        self.embed_model= self.get_model()
         self._ensure_output_directory()
+    
+    @property
+    def embed_model(self):
+        """생성자에서 모델 저장하지 말고 필요할 때 가져오기"""
+        model = get_embedding_model()
+
+        if model is None:
+            raise RuntimeError("Embedding model is not initialized")
+        return model
 
     def _ensure_output_directory(self):
         """출력 디렉토리가 존재하는지 확인하고 없으면 생성"""
@@ -111,7 +109,6 @@ class DoclingParser:
     def _get_sparse_embedding(self, text:str):
         return self.embed_model.encode(text, return_dense=False, return_sparse=True, return_colbert_vecs=False)['lexical_weights']
     
-
     def _make_jsonable(self, obj):
         """FastAPI JSON 직렬화 가능 형태로 변환"""
 
@@ -135,7 +132,6 @@ class DoclingParser:
             return [self._make_jsonable(v) for v in obj]
 
         return obj
-
 
     def _process_single_page(self, loaded_docs, page_num: int, filename: str, filepath:str, lv1_cat: str, lv2_cat: str, lv3_cat: str, lv4_cat: str) -> Document:
         """단일 페이지 처리"""

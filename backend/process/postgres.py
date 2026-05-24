@@ -15,6 +15,11 @@ from pathlib import Path
 utils_path = Path(__file__).parent.parent
 sys.path.append(str(utils_path))
 
+
+from core.dependencies import (
+    get_pg_connection,
+    release_pg_connection
+)
 from utils.config import get_config
 from utils.setlogger import setup_logger
 config = get_config()
@@ -25,12 +30,6 @@ class PostgresPipeline:
         """데이터베이스 연결 정보를 초기화합니다."""
 
         self.schema_name = schema_name
-        self.db_config = {
-            "host": host,
-            "dbname": database,
-            "user": user,
-            "password": password
-        }
 
     def _ensure_schema_exists(self, conn):
         """스키마가 없으면 생성"""
@@ -47,7 +46,7 @@ class PostgresPipeline:
         try:
             logger.info("START - POSTGRES DB CONNECTION")
 
-            conn = psycopg2.connect(**self.db_config)
+            conn = get_pg_connection()
             conn.autocommit = True
 
             with conn.cursor() as cur:
@@ -423,30 +422,8 @@ class PostgresPipeline:
         finally:
             if conn is not None:
                 conn.close()
-
-    def get_row_by_hashed_contentpath(self, table_name, hashed_contentpath):
-        """
-        PostgreSQL에서 특정 hashed_contentpath의 데이터를 조회하는 함수
-        """
-        conn = None
-        try:
-            conn = self._get_db_connection()
-            cur = conn.cursor()
-
-            query = f"SELECT * FROM {self.schema_name}.{table_name} WHERE hashed_contentpath = %s"
-            cur.execute(query, (hashed_contentpath,))
-            
-            result = cur.fetchall()
-            return result
-
-        except Exception as e:
-            print("Error:", e)
-            return None
-        finally:
-            if conn:
-                conn.close()
     
-    def get_unique_hashed_contentpath(self, table_name):
+    def get_unique_hashed_content(self, table_name):
         """
         PostgreSQL에서 특정 hashed_contentpath 데이터만 조회하는 함수 (중복 제거)
         """
@@ -455,7 +432,7 @@ class PostgresPipeline:
             conn = self._get_db_connection()
             cur = conn.cursor()
 
-            query = f"SELECT hashed_contentpath FROM {self.schema_name}.{table_name}"
+            query = f"SELECT hashed_content FROM {self.schema_name}.{table_name}"
             cur.execute(query)
             
             rows = cur.fetchall()

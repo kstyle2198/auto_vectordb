@@ -92,21 +92,21 @@ def delete_table(table_name: str):
 # -----------------------------
 @pg_api.post("/insert_from_pickle", summary="피클 파일에서 DB로 데이터 삽입", tags=["Postgres"])
 async def insert_from_pickle(
-    table_name: str = Form(...),
-    pickle_path: str = Form(...)
+    table_name: str = Form(..., description="입력할 테이블명"),
+    pickle_folder: str = Form(..., description="피클 파일 저장 폴더명")
     ):
     """
     서버 내 pickle 파일 경로를 받아 데이터를 DB에 insert
     """
     try:
         # 실제 삽입 처리
-        files = list_files_recursive(pickle_path)
+        files = list_files_recursive(pickle_folder)
         for pickle_path in files:
             pickle_path = pickle_path.replace("\\", "/")
             if pickle_path.endswith(".pkl"):
                 pg.insert_data_from_pickle(table_name, pickle_path)     
 
-        return {"message": f"Data inserted successfully from {pickle_path}"}
+        return {"message": f"Data inserted successfully from {pickle_folder}"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -137,12 +137,12 @@ async def select_all(
         raise HTTPException(status_code=500, detail=str(e))
     
 
-@pg_api.get("/unique-filepath/{table_name}", tags=["Postgres"])
+@pg_api.get("/unique-hashed-content/{table_name}", tags=["Postgres"])
 def get_unique_hashed_filepath(table_name: str):
     """
     hashed_filepath 고유값 리스트 조회 API
     """
-    result = pg.get_unique_hashed_filepath(table_name)
+    result = pg.get_unique_hashed_content(table_name)
 
     if result is None:
         return {"status": "error", "message": "DB 조회 중 오류 발생"}

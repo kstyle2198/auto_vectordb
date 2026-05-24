@@ -58,7 +58,7 @@ async def upload_chunk(
     
     Args:
         file (UploadFile): 업로드할 파일 청크 데이터
-        filename (str): 최종 완성될 파일명
+        filename (str): 최종 완성될 파일명, 확장자 포함
         chunk_index (int): 현재 업로드 중인 청크의 인덱스 (0부터 시작)
         total_chunks (int): 전체 청크 개수
         server_path (str): 서버에 저장할 상대 경로 (uploaded/ 디렉토리 하위)
