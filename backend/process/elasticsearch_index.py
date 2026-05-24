@@ -2,6 +2,7 @@ import json
 import psycopg2
 
 from elasticsearch import Elasticsearch, helpers
+from core.dependencies import get_es, get_pg_connection, get_embedding_model
 
 from utils.config import get_config
 from utils.setlogger import setup_logger
@@ -11,28 +12,28 @@ logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 class ElasticsearchIndexer:
 
-    def __init__(self, es_index_name: str, table_name: str):
+    def __init__(self):
         """
         PostgreSQL → Elasticsearch Hybrid Indexer
         """
 
-        self.es_index_name = es_index_name
-        self.table_name = table_name
+        self.es = get_es()
+    
+    @property
+    def embed_model(self):
+        """생성자에서 모델 저장하지 말고 필요할 때 가져오기"""
+        model = get_embedding_model()
 
-        self.es = Elasticsearch("http://localhost:9200")
+        if model is None:
+            raise RuntimeError("Embedding model is not initialized")
+        return model
 
     # =========================================================
     # PostgreSQL
     # =========================================================
 
     def _get_pg_connection(self):
-
-        return psycopg2.connect(
-            host=config.POSTGRES_HOST,
-            dbname=config.POSTGRES_DB,
-            user=config.POSTGRES_USER,
-            password=config.POSTGRES_PW
-        )
+        return get_pg_connection()
     
     # =========================================================
     # Get All Index Names
@@ -58,17 +59,12 @@ class ElasticsearchIndexer:
     # Elasticsearch Index
     # =========================================================
 
-    def create_index(self):
+    def create_index(self, index_name):
         """
         Hybrid Search용 Elasticsearch Index 생성
         """
 
         mapping = {
-            "settings": {
-                "index": {
-                    "knn": True
-                }
-            },
             "mappings": {
                 "properties": {
 
@@ -93,10 +89,7 @@ class ElasticsearchIndexer:
                         "type": "dense_vector",
                         "dims": 1024,
                         "index": True,
-                        "similarity": "cosine",
-                        "index_options": {
-                            "type": "hnsw"
-                        }
+                        "similarity": "cosine"
                     },
 
                     "sparse_embeddings": {
@@ -114,13 +107,13 @@ class ElasticsearchIndexer:
             }
         }
 
-        if not self.es.indices.exists(index=self.es_index_name):
+        if not self.es.indices.exists(index=index_name):
 
-            self.es.indices.create(index=self.es_index_name, body=mapping)
-            print(f"Index created: {self.es_index_name}")
+            self.es.indices.create(index=index_name, body=mapping)
+            logger.info(f"Index created: {index_name}")
 
         else:
-            print(f"Index already exists: {self.es_index_name}")
+            logger.info(f"Index already exists: {index_name}")
 
     # =========================================================
     # Sparse Embedding Convert
@@ -153,6 +146,7 @@ class ElasticsearchIndexer:
 
     def fetch_data(
         self,
+        table_name: str,
         batch_size: int = 100
         ):
         """
@@ -171,7 +165,7 @@ class ElasticsearchIndexer:
                 sparse_embeddings,
                 created_at,
                 updated_at
-            FROM {self.table_name}
+            FROM {table_name}
         """
 
         try:
@@ -209,7 +203,7 @@ class ElasticsearchIndexer:
                 items.append((new_key, v))
         return dict(items)
 
-    def generate_actions(self, rows):
+    def generate_actions(self, index_name, rows):
         """
         Elasticsearch bulk action generator
         """
@@ -235,7 +229,7 @@ class ElasticsearchIndexer:
                     dense_embeddings = []
 
             action = {
-                "_index": self.es_index_name,
+                "_index": index_name,
                 "_id": id_,
 
                 "_source": {
@@ -259,16 +253,16 @@ class ElasticsearchIndexer:
     # Bulk Index
     # =========================================================
 
-    def bulk_index(self, batch_size: int = 200, chunk_size: int = 200):
+    def bulk_index(self, table_name:str, index_name:str, batch_size: int = 200, chunk_size: int = 200):
         """
         PostgreSQL → Elasticsearch Bulk Index
         """
 
         total_indexed = 0
 
-        for rows in self.fetch_data(batch_size=batch_size):
+        for rows in self.fetch_data(table_name=table_name, batch_size=batch_size):
 
-            actions = self.generate_actions(rows)
+            actions = self.generate_actions(index_name=index_name, rows=rows)
 
             success, failed = helpers.bulk(
                 self.es,
@@ -287,69 +281,114 @@ class ElasticsearchIndexer:
     # Hybrid Search
     # =========================================================
 
+    from typing import Dict, Any, List
+
+
     def hybrid_search(
         self,
+        index_name: str,
         query: str,
-        query_vector: list,
         size: int = 10
-        ):
+        ) -> Dict[str, Any]:
         """
         BM25 + Dense Vector Hybrid Search
         """
 
-        response = self.es.search(
-            index=self.es_index_name,
+        try:
 
-            body={
+            # =====================================================
+            # Query Embedding
+            # =====================================================
+
+            embedding_result = self.embed_model.encode(
+                query,
+                return_dense=True,
+                return_sparse=False,
+                return_colbert_vecs=False
+            )
+
+            query_vector = embedding_result.get("dense_vecs")
+
+            if query_vector is None:
+                raise ValueError("dense_vecs is None")
+
+            # numpy.ndarray 대응
+            if hasattr(query_vector, "tolist"):
+                query_vector = query_vector.tolist()
+
+            # =====================================================
+            # Elasticsearch Query
+            # =====================================================
+
+            search_body = {
                 "size": size,
 
                 "query": {
-
-                    "script_score": {
-
-                        "query": {
-                            "match": {
-                                "page_content": query
+                    "bool": {
+                        "should": [
+                            {
+                                "match": {
+                                    "page_content": query
+                                }
                             }
-                        },
-
-                        "script": {
-
-                            "source": """
-                                cosineSimilarity(
-                                    params.query_vector,
-                                    'dense_embeddings'
-                                ) + 1.0
-                            """,
-
-                            "params": {
-                                "query_vector": query_vector
-                            }
-                        }
+                        ]
                     }
+                },
+
+                "knn": {
+                    "field": "dense_embeddings",
+                    "query_vector": query_vector,
+                    "k": size,
+                    "num_candidates": 100
                 }
             }
-        )
 
-        return response
+            # =====================================================
+            # Search
+            # =====================================================
+
+            response = self.es.search(
+                index=index_name,
+                body=search_body
+            )
+
+            logger.info(
+                f"Hybrid search completed | "
+                f"index={index_name} | "
+                f"query='{query}' | "
+                f"hits={len(response['hits']['hits'])}"
+            )
+
+            return response
+
+        except Exception as e:
+
+            logger.exception(
+                f"Hybrid search failed | "
+                f"index={index_name} | "
+                f"query='{query}' | "
+                f"error={str(e)}"
+            )
+
+            raise
 
     # =========================================================
     # Delete Index
     # =========================================================
 
-    def delete_index(self):
+    def delete_index(self, index_name):
 
-        if self.es.indices.exists(index=self.es_index_name):
+        if self.es.indices.exists(index=index_name):
 
-            self.es.indices.delete(index=self.es_index_name)
-            logger.info(f"Deleted index: {self.es_index_name}")
+            self.es.indices.delete(index=index_name)
+            logger.info(f"Deleted index: {index_name}")
 
     # =========================================================
     # Count
     # =========================================================
 
-    def count_documents(self):
-        response = self.es.count(index=self.es_index_name)
+    def count_documents(self, index_name):
+        response = self.es.count(index=index_name)
         return response["count"]
 
 

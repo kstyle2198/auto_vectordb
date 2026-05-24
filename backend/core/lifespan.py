@@ -40,22 +40,17 @@ async def lifespan(app):
             minconn=1,
             maxconn=10,
             **POSTGRES_CONFIG,
-        )
+            )
 
         logger.info("PostgreSQL pool initialized")
 
         # Elasticsearch
-        app_state.es = Elasticsearch(
-            ELASTICSEARCH_URL,
-        )
+        app_state.es = Elasticsearch(ELASTICSEARCH_URL,)
 
         logger.info("Elasticsearch initialized")
 
         # Embedding Model
-        app_state.embedding_model = BGEM3FlagModel(
-            BGE_M3_MODEL_PATH,
-            use_fp16=False,
-        )
+        app_state.embedding_model = BGEM3FlagModel(BGE_M3_MODEL_PATH, use_fp16=False,)
 
         logger.info("Embedding model loaded")
 
