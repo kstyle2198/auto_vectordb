@@ -125,27 +125,85 @@ class PostgresPipeline:
         try:
             conn = self._get_db_connection()
 
-            column_sql_list = []
+            with conn.cursor() as cur:
 
-            for column in columns_config:
-                column_sql_list.append(
-                    sql.SQL("{} {}").format(
-                        sql.Identifier(column["name"]),
-                        sql.SQL(column["type"])
+                # -------------------------
+                # CREATE TABLE
+                # -------------------------
+                column_sql_list = []
+
+                for column in columns_config:
+                    column_sql_list.append(
+                        sql.SQL("{} {}").format(
+                            sql.Identifier(column["name"]),
+                            sql.SQL(column["type"])
+                        )
+                    )
+
+                create_query = sql.SQL("""
+                    CREATE TABLE IF NOT EXISTS {} (
+                        {}
+                    )
+                """).format(
+                    self._table_identifier(table_name),
+                    sql.SQL(", ").join(column_sql_list)
+                )
+
+                cur.execute(create_query)
+
+                logger.info("TABLE CREATED")
+
+                # -------------------------
+                # UNIQUE INDEX
+                # -------------------------
+                cur.execute(
+                    sql.SQL("""
+                        CREATE UNIQUE INDEX IF NOT EXISTS {}
+                        ON {} ({})
+                    """).format(
+                        sql.Identifier(f"{table_name}_hashed_file_uidx"),
+                        self._table_identifier(table_name),
+                        sql.Identifier("hashed_file")
                     )
                 )
 
-            create_query = sql.SQL("""
-                CREATE TABLE IF NOT EXISTS {} (
-                    {}
-                )
-            """).format(
-                self._table_identifier(table_name),
-                sql.SQL(", ").join(column_sql_list)
-            )
+                logger.info("UNIQUE INDEX CREATED")
 
-            with conn.cursor() as cur:
-                cur.execute(create_query)
+                # -------------------------
+                # VECTOR HNSW INDEX
+                # -------------------------
+                cur.execute(
+                    sql.SQL("""
+                        CREATE INDEX IF NOT EXISTS {}
+                        ON {}
+                        USING hnsw (
+                            {} vector_cosine_ops
+                        )
+                    """).format(
+                        sql.Identifier(f"{table_name}_dense_hnsw_idx"),
+                        self._table_identifier(table_name),
+                        sql.Identifier("dense_embeddings")
+                    )
+                )
+
+                logger.info("VECTOR INDEX CREATED")
+
+                # -------------------------
+                # JSONB GIN INDEX
+                # -------------------------
+                cur.execute(
+                    sql.SQL("""
+                        CREATE INDEX IF NOT EXISTS {}
+                        ON {}
+                        USING gin ({})
+                    """).format(
+                        sql.Identifier(f"{table_name}_metadata_gin_idx"),
+                        self._table_identifier(table_name),
+                        sql.Identifier("metadata")
+                    )
+                )
+
+                logger.info("JSONB INDEX CREATED")
 
             conn.commit()
 
