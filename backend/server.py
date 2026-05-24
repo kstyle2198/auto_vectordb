@@ -36,7 +36,7 @@ app.include_router(es_api)
 
 
 from celery.result import AsyncResult
-from worker import long_running_task
+from workers.worker import long_running_task
 from pydantic import BaseModel
 class ParsingRequest(BaseModel):
     pdf_path: str
