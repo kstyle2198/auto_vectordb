@@ -2,6 +2,7 @@ import re
 import json
 import yaml
 import shutil
+import numpy as np
 from pathlib import Path
 import os
 import time
@@ -12,7 +13,8 @@ import pdfplumber
 from tqdm.auto import tqdm
 from langchain_core.documents import Document
 from typing import List, Optional
-from langchain_ollama import OllamaEmbeddings
+from FlagEmbedding import BGEM3FlagModel
+from threading import Lock
 
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.datamodel.base_models import InputFormat
@@ -40,13 +42,26 @@ class DoclingParser:
         ocr_options=EasyOcrOptions(lang=["en", "ko"])
         )
     
+    # Singleton 모델 - Thread-safe Singleton 변수
+    _model = None
+    _model_lock = Lock()
+    @classmethod
+    def get_model(cls):
+        # Double-checked locking
+        if cls._model is None:
+            with cls._model_lock:
+                if cls._model is None:
+                    cls._model = BGEM3FlagModel("D:/models/bge-m3", use_fp16=True)
+        return cls._model
+    
     def __init__(self, output_base_path: str = "../docs"):
         """
         Args:
             output_base_path: 파싱된 문서를 저장할 기본 경로
         """
+
         self.output_base_path = output_base_path
-        self.embed_model=OllamaEmbeddings(base_url="http://localhost:11434", model="qwen3-embedding:4b")
+        self.embed_model= self.get_model()
         self._ensure_output_directory()
 
     def _ensure_output_directory(self):
@@ -90,8 +105,37 @@ class DoclingParser:
         """문자열의 MD5 해시 반환"""
         return hashlib.md5(text.encode()).hexdigest()
     
-    def _get_embedding(self, text:str):
-        return self.embed_model.embed_query(text)
+    def _get_dense_embedding(self, text:str):
+        return self.embed_model.encode(text, return_dense=True, return_sparse=False, return_colbert_vecs=False)['dense_vecs']
+    
+    def _get_sparse_embedding(self, text:str):
+        return self.embed_model.encode(text, return_dense=False, return_sparse=True, return_colbert_vecs=False)['lexical_weights']
+    
+
+    def _make_jsonable(self, obj):
+        """FastAPI JSON 직렬화 가능 형태로 변환"""
+
+        # numpy scalar
+        if isinstance(obj, np.generic):
+            return obj.item()
+
+        # numpy array
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+
+        # dict
+        if isinstance(obj, dict):
+            return {
+                k: self._make_jsonable(v)
+                for k, v in obj.items()
+            }
+
+        # list / tuple
+        if isinstance(obj, (list, tuple)):
+            return [self._make_jsonable(v) for v in obj]
+
+        return obj
+
 
     def _process_single_page(self, loaded_docs, page_num: int, filename: str, filepath:str, lv1_cat: str, lv2_cat: str, lv3_cat: str, lv4_cat: str) -> Document:
         """단일 페이지 처리"""
@@ -104,31 +148,31 @@ class DoclingParser:
             docling_text = self.normalize_newlines(docling_text)
 
             str_filepath = str(filepath).replace("\\", "/")
-            hashed_filename = self._get_md5_string(filename)
-            hashed_filepath = self._get_md5_string(str(filepath))
             hashed_content = self._get_md5_string(docling_text)
-            embeddings = self._get_embedding(docling_text)
+            dense_embeddings = self._get_dense_embedding(docling_text)
+            sparse_embeddings = self._get_sparse_embedding(docling_text)
 
+            metadata = {
+                'id': str(uuid4()),
+                'page_type': "",
+                "global_context": "",
+                'filename': filename,
+                'page': str(page_num),
+                'filepath': str_filepath,
+                'hashed_content': hashed_content,
+                'lv1_cat': lv1_cat,
+                'lv2_cat': lv2_cat,
+                'lv3_cat': lv3_cat,
+                'lv4_cat': lv4_cat,
+                'dense_embeddings': dense_embeddings,
+                'sparse_embeddings': sparse_embeddings,
+                'status': 'success'
+            }
+
+            metadata = self._make_jsonable(metadata)
             # Document 객체 생성
-            return Document(
-                page_content=docling_text,
-                metadata={
-                    'id': str(uuid4()),
-                    'page_type':"",
-                    "global_context":"",
-                    'filename': filename,
-                    'page': str(page_num),
-                    'filepath': str_filepath,
-                    'hashed_content': hashed_content,
-                    'lv1_cat': lv1_cat,
-                    'lv2_cat': lv2_cat,
-                    'lv3_cat': lv3_cat,
-                    'lv4_cat': lv4_cat,
-                    'dense_embeddings': list(embeddings),
-                    'sparse_embeddings': list(embeddings),
-                    'status': 'success'
-                    }
-                )
+            return Document(page_content=docling_text, metadata=metadata)
+        
         except Exception as e:
             print(f"페이지 {page_num} 처리 중 오류 발생: {e}")
             # 오류 발생 시 빈 문서 반환
@@ -140,16 +184,15 @@ class DoclingParser:
                     'page_type':"",
                     "global_context":"",
                     'filename': filename,
+                    'page': str(page_num),
                     'filepath': str_filepath,
-                    'hashed_filename': "",
-                    'hashed_filepath': "",
-                    'hashed_page_content': "",
+                    'hashed_content': "",
                     'lv1_cat': lv1_cat,
                     'lv2_cat': lv2_cat,
                     'lv3_cat': lv3_cat,
                     'lv4_cat': lv4_cat,
-                    'page': str(page_num),
-                    'embeddings': [],
+                    'dense_embeddings': [],
+                    'sparse_embeddings': [],
                     'error': str(e),
                     'status': "fail"
                     }
@@ -283,8 +326,6 @@ class DoclingParser:
             self._clear_folder(folder_path=folder_path)
 
         return all_docs
-
-
 
 
 # 사용 예시

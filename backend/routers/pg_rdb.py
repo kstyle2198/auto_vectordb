@@ -25,9 +25,6 @@ def list_files_recursive(folder_path: str):
         for file in files:
             yield os.path.join(root, file)
 
-
-
-
 # -----------------------------
 # 💠 1) 테이블명 조회
 # -----------------------------

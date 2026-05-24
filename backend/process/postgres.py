@@ -3,8 +3,9 @@ from __future__ import annotations
 import json
 import pickle
 import psycopg2
+import numpy as np
 from psycopg2 import sql
-from psycopg2.extras import execute_batch
+from psycopg2.extras import execute_batch, Json
 import pandas as pd
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -75,16 +76,17 @@ class PostgresPipeline:
 
             with conn.cursor() as cur:
                 query = """
-                SELECT table_name
+                SELECT table_schema, table_name
                 FROM information_schema.tables
-                WHERE table_schema = %s
-                ORDER BY table_name;
+                WHERE table_type = 'BASE TABLE'
+                AND table_schema NOT IN ('pg_catalog', 'information_schema')
+                ORDER BY table_schema, table_name
                 """
 
                 cur.execute(query, (self.schema_name,))
-                tables = cur.fetchall()
+                rows  = cur.fetchall()
 
-            return [t[0] for t in tables]
+                return [f"{row[0]}.{row[1]}" for row in rows]
 
         except Exception as e:
             logger.error(f"GET TABLE ERROR: {e}")
@@ -301,6 +303,29 @@ class PostgresPipeline:
                 conn.close()
                 logger.info("데이터베이스 연결 종료")
 
+    def _make_jsonable(self, obj):
+        """numpy/scipy 타입을 JSON 직렬화 가능하게 변환"""
+
+        if obj is None:
+            return None
+
+        if isinstance(obj, np.generic):
+            return obj.item()
+
+        if isinstance(obj, np.ndarray):
+            return obj.astype(float).tolist()
+
+        if isinstance(obj, dict):
+            return {
+                k: self._make_jsonable(v)
+                for k, v in obj.items()
+            }
+
+        if isinstance(obj, (list, tuple)):
+            return [self._make_jsonable(v) for v in obj]
+
+        return obj
+
     def insert_data_from_pickle(self, table_name: str, pickle_path: str):
         """
         """
@@ -336,16 +361,20 @@ class PostgresPipeline:
             # 데이터 정규화
             normalized = []
             for row in tqdm(data):
-                exclude_keys = ["hashed_content", "dense_embeddings", "sparse_embeddings", "status"]
+                exclude_keys = ["id", "hashed_content", "dense_embeddings", "sparse_embeddings", "status"]
                 filtered_metadata = {k: v for k, v in row["metadata"].items() if k not in exclude_keys}
+                
+                dense_embeddings = self._make_jsonable(row["metadata"].get("dense_embeddings"))
+                sparse_embeddings = self._make_jsonable(row["metadata"].get("sparse_embeddings"))
+
 
                 new_row = [
                     row["metadata"].get("id"),
                     row["metadata"].get("hashed_content"),
                     row.get("page_content"),
-                    filtered_metadata,
-                    row["metadata"].get("dense_embeddings"),
-                    row["metadata"].get("sparse_embeddings"),
+                    Json(filtered_metadata),
+                    dense_embeddings,
+                    Json(sparse_embeddings),
                     row.get("created_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")),
                     row.get("updated_at", datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"))
                     ]

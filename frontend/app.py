@@ -174,22 +174,15 @@ def upload_file_in_chunks(local_base_path:str, local_path:str):
 
 col_schema = [
     {'name': 'id', 'type': 'VARCHAR(300) NOT NULL'}, 
+    {'name': 'hashed_content', 'type': 'VARCHAR(64) UNIQUE NOT NULL'}, 
     {'name': 'page_content', 'type': 'TEXT NOT NULL'}, 
-    {'name': 'page_type', 'type': 'VARCHAR(300)'}, 
-    {'name': 'global_context', 'type': 'TEXT'}, 
-    {'name': 'filepath', 'type': 'VARCHAR(300) NOT NULL'}, 
-    {'name': 'hashed_filename', 'type': 'VARCHAR(300)'}, 
-    {'name': 'hashed_filepath', 'type': 'VARCHAR(300)'}, 
-    {'name': 'hashed_page_content', 'type': 'VARCHAR(300)'}, 
-    {'name': 'page', 'type': 'VARCHAR(300) NOT NULL'}, 
-    {'name': 'lv1_cat', 'type': 'VARCHAR(300)'}, 
-    {'name': 'lv2_cat', 'type': 'VARCHAR(300)'}, 
-    {'name': 'lv3_cat', 'type': 'VARCHAR(300)'}, 
-    {'name': 'lv4_cat', 'type': 'VARCHAR(300)'}, 
-    {'name': 'embeddings', 'type': 'VECTOR(2560)'}, 
+    {'name': 'metadata', 'type': 'JSONB'}, 
+    {'name': 'dense_embeddings', 'type': 'VECTOR(1024)'}, 
+    {'name': 'sparse_embeddings', 'type': 'JSONB'}, 
     {"name": "created_at", "type": "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"},
     {"name": "updated_at", "type": "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"}
     ]
+
 
 if "task_ids" not in st.session_state: st.session_state.task_ids = []
 if "pending_results" not in st.session_state: st.session_state.pending_results = []
