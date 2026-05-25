@@ -203,7 +203,6 @@ if "success_results" not in st.session_state: st.session_state.success_results =
 
 if __name__ == "__main__":
 
-    st.session_state
     st.title(":blue[Auto VectorDB]")
     st.page_link(label="FastAPI Docs", page="http://localhost:8001/docs")
     st.markdown("---")

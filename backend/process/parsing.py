@@ -1,6 +1,5 @@
 import re
-import json
-import yaml
+import gc
 import shutil
 import numpy as np
 from pathlib import Path
@@ -240,10 +239,16 @@ class DoclingParser:
             for page_num in tqdm(range(total_pages), desc=f"파싱 중 - {filename}"):
                 doc = self._process_single_page(loaded_docs, page_num, filename, pdf_path, lv1_cat, lv2_cat, lv3_cat, lv4_cat)
                 docs.append(doc)
-                time.sleep(0.1)  # 시스템 부하 방지
+                time.sleep(0.01)  # 시스템 부하 방지
 
             # 결과 저장
             self._save_documents(docs, filename, lv1_cat, lv2_cat, lv3_cat, lv4_cat)
+
+            # 메모리 정리
+            del loaded_docs
+            gc.collect()
+            # Windows 파일 잠금 해제 대기
+            time.sleep(1)
 
             # 저장 완료 후 원본 PDF 삭제
             try:
@@ -252,7 +257,7 @@ class DoclingParser:
             except Exception as delete_error:
                 logger.error(f"PDF 삭제 실패: {delete_error}")
                 
-                return docs
+            return docs
 
         except Exception as e:
             print(f"PDF 파싱 중 오류 발생: {e}")
