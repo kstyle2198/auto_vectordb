@@ -73,16 +73,17 @@ def create_table(data: CreateTableRequest):
 # -----------------------------
 # 💠 3) 테이블 삭제
 # -----------------------------
-@pg_api.delete("/tables/{table_name}", summary="테이블 삭제", tags=["Postgres"])
-def delete_table(table_name: str):
+@pg_api.delete("/tables/{schema_table_name}", summary="테이블 삭제", tags=["Postgres"])
+def delete_table(schema_table_name: str):
     try:
         tables = pg.get_all_tables()
-        if table_name in tables:
+        if schema_table_name in tables:
+            table_name = schema_table_name.split(".")[-1]
             pg.drop_table(table_name)
             logger.info(f"'{table_name}' 테이블 삭제 완료")
             return {"message": f"'{table_name}' 테이블 삭제 완료"}
         else:
-            logger.warning(f"테이블 {table_name}는 존재하지 않습니다.")
+            logger.warning(f"테이블 {schema_table_name}는 존재하지 않습니다.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     

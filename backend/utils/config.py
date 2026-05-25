@@ -6,6 +6,8 @@ class BaseConfig:
     ENV: str = os.getenv("ENV", "production")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
+    SCHEMA_NAME : str = os.getenv("SCHEMA_NAME", "test_01")
+
     REDIS_BROKER_URL: str = os.getenv("BROKER_URL", "redis://localhost:6379/0")
     REDIS_BACKEND_URL: str = os.getenv("RESULT_BACKEND", "redis://localhost:6379/1")
     REDIS_PUBSUB_URL: str = os.getenv("REDIS_PUBSUB_URL", "redis://localhost:6379/2")

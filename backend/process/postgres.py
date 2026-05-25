@@ -26,7 +26,7 @@ config = get_config()
 logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 class PostgresPipeline:
-    def __init__(self, host=config.POSTGRES_HOST, database=config.POSTGRES_DB, user=config.POSTGRES_USER, password=config.POSTGRES_PW, schema_name: str = "test01"):
+    def __init__(self, schema_name: str = config.SCHEMA_NAME):
         """데이터베이스 연결 정보를 초기화합니다."""
 
         self.schema_name = schema_name
@@ -63,8 +63,12 @@ class PostgresPipeline:
             raise
     
     def _table_identifier(self, table_name: str):
-        """schema.table Identifier 생성"""
-        return sql.Identifier(self.schema_name, table_name)
+        """schema.table or table 처리"""
+        if "." in table_name:
+            schema, table = table_name.split(".", 1)
+            return sql.Identifier(self.schema_name, table)
+        else:
+            return sql.Identifier(self.schema_name, table_name)
 
     def get_all_tables(self):
         """현재 스키마의 모든 테이블 조회"""
@@ -100,12 +104,19 @@ class PostgresPipeline:
 
         try:
             conn = self._get_db_connection()
+            conn.autocommit = True  # 중요 (lock/transaction 문제 방지)
 
-            query = sql.SQL(
-                "DROP TABLE IF EXISTS {} CASCADE"
-            ).format(
-                self._table_identifier(table_name)
-            )
+            # query = sql.SQL(
+            #     "DROP TABLE IF EXISTS {} CASCADE"
+            # ).format(
+            #     self._table_identifier(table_name)
+            # )
+            query = sql.SQL("DROP TABLE IF EXISTS {}.{} CASCADE").format(
+                sql.Identifier(self.schema_name),
+                sql.Identifier(table_name)
+                )
+            
+            logger.info(f"DROP QUERY: {query.as_string(conn)}")
 
             with conn.cursor() as cur:
                 cur.execute(query)

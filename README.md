@@ -18,5 +18,11 @@
 
 
 
+#### Terminal PS Kill
+- PORT로 조회 : netstat -ano | findstr :5556
+- PID로 Kill : taskkill /PID 12345 /F
+
+
+
 
 

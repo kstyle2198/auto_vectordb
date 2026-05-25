@@ -52,15 +52,19 @@ class DoclingParser:
 
         self.output_base_path = output_base_path
         self._ensure_output_directory()
-    
-    @property
-    def embed_model(self):
-        """생성자에서 모델 저장하지 말고 필요할 때 가져오기"""
-        model = get_embedding_model()
 
-        if model is None:
-            raise RuntimeError("Embedding model is not initialized")
-        return model
+        self._embed_model = get_embedding_model()
+        if self._embed_model is None:
+            raise RuntimeError("Embedding model not initialized at parser init")
+    
+    # @property
+    # def embed_model(self):
+    #     """생성자에서 모델 저장하지 말고 필요할 때 가져오기"""
+    #     model = get_embedding_model()
+
+    #     if model is None:
+    #         raise RuntimeError("Embedding model is not initialized")
+    #     return model
 
     def _ensure_output_directory(self):
         """출력 디렉토리가 존재하는지 확인하고 없으면 생성"""
@@ -104,10 +108,10 @@ class DoclingParser:
         return hashlib.md5(text.encode()).hexdigest()
     
     def _get_dense_embedding(self, text:str):
-        return self.embed_model.encode(text, return_dense=True, return_sparse=False, return_colbert_vecs=False)['dense_vecs']
+        return self._embed_model.encode(text, return_dense=True, return_sparse=False, return_colbert_vecs=False)['dense_vecs']
     
     def _get_sparse_embedding(self, text:str):
-        return self.embed_model.encode(text, return_dense=False, return_sparse=True, return_colbert_vecs=False)['lexical_weights']
+        return self._embed_model.encode(text, return_dense=False, return_sparse=True, return_colbert_vecs=False)['lexical_weights']
     
     def _make_jsonable(self, obj):
         """FastAPI JSON 직렬화 가능 형태로 변환"""

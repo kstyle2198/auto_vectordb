@@ -3,7 +3,7 @@ import os
 import json
 from pydantic import ValidationError
 
-from workers.worker import celery_app
+from core.celery_app import celery_app
 from process.parsing import DoclingParser
 
 from utils.config import get_config
@@ -46,16 +46,6 @@ def long_running_task(self, pdf_path: str):
     task_id = self.request.id
     channel_name = f"task_results:{task_id}"
 
-    # file_path, file_name = os.path.split(pdf_path)
-    # target_file_path = file_path.split("uploaded")[1].replace("\\", "/")
-    # target_file_path = target_file_path.split("/")
-
-    # 파일 폴더 경로에서 level cat 추출 (최대 4개까지)
-    # cats = defaultdict(str)
-    # for i in range(1,5,1):
-    #     try: cats[f"lv{i}_cat"] = target_file_path[i]
-    #     except: cats[f"lv{i}_cat"] = ""
-    
     cats = extract_category(pdf_path)
     lv1_cat, lv2_cat, lv3_cat, lv4_cat = cats["lv1_cat"], cats["lv2_cat"], cats["lv3_cat"], cats["lv4_cat"]
 
