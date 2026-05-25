@@ -8,7 +8,7 @@
 
 - 25/11/16: Make RDB, PDF Upload, Parsing, Insert RDB
 - 25/11/23: Insert RDB ElasticSearch Indexing and Refactoring (phase1 completed)
-- 2512/7 : Backgroud Task for Parsing with Celery, Redis
+- 25/12/07 : Backgroud Task for Parsing with Celery, Redis
 - 26/05/25 : Simplify processes and Correct errors. (Now, completely operational)
 
 <img width="1789" height="689" alt="image" src="https://github.com/user-attachments/assets/5f39668c-f440-47c7-80f8-c387d2accd6e" />
