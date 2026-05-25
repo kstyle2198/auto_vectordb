@@ -16,21 +16,18 @@ es_api = APIRouter(prefix="/es", tags=["Elasticsearch"])
 # =========================================================
 
 class CreateIndexRequest(BaseModel):
-    index_name: str
-
+    index_name: str = Field(..., description="생성할 Elasticsearch 인덱스 이름")
 
 class BulkIndexRequest(BaseModel):
-    table_name: str
-    index_name: str
-    batch_size: int = 200
-    chunk_size: int = 200
-
+    schema_table_name: str = Field(..., description="스키마명 포함한 테이블명")
+    index_name: str = Field(..., description="데이터를 적재할 Elasticsearch 인덱스 이름")
+    batch_size: int = Field(200, description="DB에서 한 번에 가져올 배치 크기 (bulk insert 단위)")
+    chunk_size: int = Field(200, description="문서를 chunking 할 때 사용할 분할 크기")
 
 class HybridSearchRequest(BaseModel):
-    index_name: str
-    query: str
-    size: int = 10
-
+    index_name: str = Field(..., description="검색 대상 Elasticsearch 인덱스 이름")
+    query: str = Field(..., description="BM25 + Vector hybrid search에 사용할 검색 쿼리")
+    size: int = Field(10, description="검색 결과 반환 개수")
 
 # =========================================================
 # dependency injection
@@ -119,7 +116,7 @@ def bulk_index(request: BulkIndexRequest, es_indexer: ElasticsearchIndexer = Dep
     try:
 
         result = es_indexer.bulk_index(
-            table_name=request.table_name,
+            schema_table_name=request.schema_table_name,
             index_name=request.index_name,
             batch_size=request.batch_size,
             chunk_size=request.chunk_size

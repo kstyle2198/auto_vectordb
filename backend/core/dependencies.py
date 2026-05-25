@@ -17,7 +17,7 @@ def init_embedding_model(model_name=config.EMBED_MODEL_PATH):
     global _embedding_model
     with _lock:
         if _embedding_model is None:
-            _embedding_model = BGEM3FlagModel(model_name, use_fp16=False)
+            _embedding_model = BGEM3FlagModel(model_name, use_fp16=True)
 
 def get_embedding_model():
     global _embedding_model

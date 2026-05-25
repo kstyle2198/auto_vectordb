@@ -30,6 +30,10 @@ from docling.pipeline.standard_pdf_pipeline import StandardPdfPipeline
 from collections import defaultdict
 
 from core.dependencies import get_embedding_model
+from utils.config import get_config
+from utils.setlogger import setup_logger
+config = get_config()
+logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
 class DoclingParser:
     """PDF 문서를 Docling을 사용하여 파싱하는 클래스"""
@@ -57,15 +61,6 @@ class DoclingParser:
         if self._embed_model is None:
             raise RuntimeError("Embedding model not initialized at parser init")
     
-    # @property
-    # def embed_model(self):
-    #     """생성자에서 모델 저장하지 말고 필요할 때 가져오기"""
-    #     model = get_embedding_model()
-
-    #     if model is None:
-    #         raise RuntimeError("Embedding model is not initialized")
-    #     return model
-
     def _ensure_output_directory(self):
         """출력 디렉토리가 존재하는지 확인하고 없으면 생성"""
         Path(self.output_base_path).mkdir(parents=True, exist_ok=True)
@@ -174,7 +169,7 @@ class DoclingParser:
             return Document(page_content=docling_text, metadata=metadata)
         
         except Exception as e:
-            print(f"페이지 {page_num} 처리 중 오류 발생: {e}")
+            logger.error(f"페이지 {page_num} 처리 중 오류 발생: {e}")
             # 오류 발생 시 빈 문서 반환
             str_filepath = str(filepath).replace("\\", "/")
             return Document(
@@ -210,7 +205,7 @@ class DoclingParser:
                 os.unlink(item_path)  # 파일 또는 링크 삭제
             elif os.path.isdir(item_path):
                 shutil.rmtree(item_path)  # 폴더 삭제
-        print(f"폴더 내부가 모두 삭제되었습니다: {folder_path}")
+        logger.info(f"폴더 내부가 모두 삭제되었습니다: {folder_path}")
 
     def parse_pdf_by_page(self, pdf_path: str, lv1_cat: str, lv2_cat: str, lv3_cat: str, lv4_cat: str) -> List[Document]:
         """
@@ -249,8 +244,15 @@ class DoclingParser:
 
             # 결과 저장
             self._save_documents(docs, filename, lv1_cat, lv2_cat, lv3_cat, lv4_cat)
-            
-            return docs
+
+            # 저장 완료 후 원본 PDF 삭제
+            try:
+                pdf_path1.unlink()
+                logger.info(f"원본 PDF 삭제 완료: {pdf_path1}")
+            except Exception as delete_error:
+                logger.error(f"PDF 삭제 실패: {delete_error}")
+                
+                return docs
 
         except Exception as e:
             print(f"PDF 파싱 중 오류 발생: {e}")
@@ -266,7 +268,7 @@ class DoclingParser:
         with open(output_path, 'wb') as file:  # 'wb' 모드로 변경
             pickle.dump(docs, file)
         
-        print(f"문서 저장 완료: {output_path}")
+        logger.info(f"문서 저장 완료: {output_path}")
 
     def list_files_recursive(self, folder_path: str):
         """폴더 안의 파일을 재귀적으로 읽어서 제너레이터로 반환하는 함수"""
@@ -296,7 +298,7 @@ class DoclingParser:
         pdf_files = self.list_files_recursive(folder_path=folder_path)
         
         if not pdf_files:
-            print("처리할 PDF 파일이 없습니다.")
+            logger.warning("처리할 PDF 파일이 없습니다.")
             return []
 
         all_docs = []
@@ -318,7 +320,7 @@ class DoclingParser:
                 docs = self.parse_pdf_by_page(str(pdf_file), lv1_cat, lv2_cat, lv3_cat, lv4_cat)
                 all_docs.append(docs)
             except Exception as e:
-                print(f"{pdf_file} 처리 중 오류: {e}")
+                logger.error(f"{pdf_file} 처리 중 오류: {e}")
                 continue
         
         # 업로드 파일 삭제

@@ -11,7 +11,7 @@ from core.lifespan import lifespan
 # ---------------------------------------------------
 # FastAPI 앱
 # ---------------------------------------------------
-app = FastAPI(title="Auto VectorDB API",  lifespan=lifespan,)
+app = FastAPI(title="Auto VectorDB API",  version="0.1.1", description="벡터DB 자동화 파이프라인 API", lifespan=lifespan,)
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,20 +21,11 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
     )
 
-
-from routers.pg_rdb import pg_api
-app.include_router(pg_api)
-
 from routers.upload import upload_api
 app.include_router(upload_api)
 
 from routers.parser import parser_api
 app.include_router(parser_api)
-
-from routers.es_index import es_api
-app.include_router(es_api)
-
-from routers.task_router import long_running_task
 
 from celery.result import AsyncResult
 from routers.task_router import long_running_task
@@ -66,8 +57,14 @@ async def get_task_status(task_id: str):
     }
 
 
+from routers.pg_rdb import pg_api
+app.include_router(pg_api)
+
+from routers.es_index import es_api
+app.include_router(es_api)
+
 
 if __name__ == "__main__":
     import uvicorn
     logger.info("Starting FastAPI server...")
-    uvicorn.run("server:app", host="0.0.0.0", port=8001, reload=True, workers=2)
+    uvicorn.run("server:app", host="0.0.0.0", port=8001, reload=True, workers=1)

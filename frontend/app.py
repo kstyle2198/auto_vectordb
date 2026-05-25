@@ -16,7 +16,8 @@ from utils.setlogger import setup_logger
 config = get_config()
 logger = setup_logger(f"{__name__}", level=config.LOG_LEVEL)
 
-FASTAPI_BASEURL = "http://localhost:8001"
+FASTAPI_BASEURL = config.FASTAPI_BASEURL
+SCHEMA_NAME = config.SCHEMA_NAME
 
 
 from utils.style import HOVERING_EFFECT
@@ -132,10 +133,22 @@ setInterval(showNextSlide, 3000);
 if "hashed_filepath" not in st.session_state: st.session_state.hashed_filepath=[]
 
 def list_files_recursive(folder_path: str):
-    """폴더 안의 파일을 재귀적으로 읽어서 제너레이터로 반환하는 함수"""
+
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(
+            f"폴더 없음: {folder_path}"
+        )
+
     for root, dirs, files in os.walk(folder_path):
+
         for file in files:
-            yield os.path.join(root, file)
+
+            if file.endswith((".pickle", ".pkl")):
+
+                yield os.path.join(
+                    root,
+                    file
+                ).replace("\\", "/")
 
 def count_files(folder_path: str) -> int:
     """총 파일 개수 (메모리 부담 없음)"""
@@ -183,62 +196,22 @@ col_schema = [
     {"name": "updated_at", "type": "TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP"}
     ]
 
-
+if "project_name" not in st.session_state: st.session_state.project_name = ""
 if "task_ids" not in st.session_state: st.session_state.task_ids = []
 if "pending_results" not in st.session_state: st.session_state.pending_results = []
 if "success_results" not in st.session_state: st.session_state.success_results = []
 
 if __name__ == "__main__":
+
+    st.session_state
     st.title(":blue[Auto VectorDB]")
     st.page_link(label="FastAPI Docs", page="http://localhost:8001/docs")
     st.markdown("---")
 
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1: 
-        st.subheader(":blue[Create Postgres Table]")
-        st.info("파싱 데이터를 저장할 RDB 준비")
-        with st.expander("Create Table"):
-            table_name = st.text_input("테이블명 입력(프로젝트명과 동일하게)", placeholder="예: my_table", value="프로젝트명")
+    col1, col2, col3 = st.columns(3)
 
-            if st.button("🚀 테이블 생성"):
-                if table_name.strip() == "":
-                    st.error("테이블명을 입력하세요.")
-                else:
-                    # FastAPI 요청 payload 생성
-                    payload = {
-                        "table_name": table_name,
-                        "columns": col_schema
-                        }
-
-                    try:
-                        res = requests.post(f"{FASTAPI_BASEURL}/create_tables", json=payload)
-
-                        if res.status_code == 200:
-                            st.success(res.json().get("message"))
-                        else:
-                            st.error(f"오류: {res.text}")
-
-                    except Exception as e:
-                        st.error(f"API 호출 중 오류: {str(e)}")
-
-            if st.button("🔍 테이블 확인"):
-                try:
-                    res = requests.get(f"{FASTAPI_BASEURL}/tables")
-                    if res.status_code == 200:
-                        tables = res.json().get("tables", [])
-
-                        if table_name not in tables:
-                            st.info("테이블이 없습니다.")
-                        else:
-                            st.info(f"테이블 {table_name}이 잘 생성되었습니다..")
-                    else:
-                        st.error(f"오류: {res.text}")
-
-                except Exception as e:
-                    st.error(f"API 호출 중 오류: {str(e)}")
-
-    with col2:
-        st.subheader(":green[Local File Upload]")
+    with col1:
+        st.subheader(":green[File Upload & Parsing]")
         st.info("로컬 파일을 서버 사이드로 이동")
         local_base_path_sample = "C:\\Users\\jongb\\OneDrive\\바탕 화면\\temp\\프로젝트명"   # Local top folder path
         local_base_path_sample = local_base_path_sample.replace("\\", "/")
@@ -246,6 +219,7 @@ if __name__ == "__main__":
         with st.expander("File Upload"):
             local_base_path = st.text_input("로컬 프로젝트 폴더 경로를 입력하세요", value=local_base_path_sample)
             local_base_path = local_base_path.replace("\\", "/")
+            st.session_state.project_name = local_base_path.split("/")[-1]   # 맨 마지막 폴더명이 프로젝트명
         
             if st.button("대용량 청킹 파일 전송"):
                 if not os.path.exists(local_base_path):
@@ -271,43 +245,9 @@ if __name__ == "__main__":
 
                 st.success("🎉 모든 파일 업로드 완료!")
 
-    with col3:
-        st.subheader(":blue[PDF Parsing 배치 처리]")
-        st.info("PDF 파싱후 Pickle 형식 저장")
-
-        with st.expander("Parsing with Docling"):
-
-            # 폴더 경로 입력
-            folder_path = st.text_input("폴더 경로를 입력하세요", "./docs/uploaded/프로젝트명")
-
-            # remove_original 옵션
-            remove_original = st.checkbox("처리 후 원본 파일 삭제(위 폴더 경로 내부 폴더 및 파일 삭제)", value=False)
-
-            if st.button("배치 처리 시작"):
-                if not folder_path:
-                    st.error("폴더 경로를 입력하세요.")
-                else:
-                    with st.spinner("배치 처리 중..."):
-                        try:
-                            response = requests.post(
-                                f"{FASTAPI_BASEURL}/batch_parse_by_folder",
-                                data={
-                                    "folder_path": folder_path,
-                                    "remove_original": remove_original
-                                    }
-                                )
-                            if response.status_code == 200:
-                                result = response.json()
-                                st.success(f"배치 처리 완료! - 총 {len(result)}개 문서")
-                            else:
-                                st.error(f"에러 발생: {response.status_code} - {response.text}")
-                        except Exception as e:
-                            st.error(f"서버 연결 실패: {e}")
-
-
         with st.expander("Background Parsing"):
 
-            folder_path = st.text_input("폴더 경로를 입력하세요", "./docs/uploaded/프로젝트명", key="wererww")
+            folder_path = st.text_input("폴더 경로를 입력하세요", f"./docs/uploaded/{st.session_state.project_name}", key="wererww")
 
             if st.button("Task ID 초기화"):
                 st.session_state.task_ids = []
@@ -319,7 +259,7 @@ if __name__ == "__main__":
                 for file in requests.get(f"{FASTAPI_BASEURL}/list-files-stream", params={"folder_path": folder_path}, stream=True):
                     file = file.decode("utf-8")
                     file = json.loads(file)
-                    st.info(file)
+                    st.info(f"target_file: {file}")
                     pdf_path = file["pdf_path"]
                     response = requests.post(f"{FASTAPI_BASEURL}/background_parsing", json = {"pdf_path": pdf_path})
                     data = response.json()
@@ -340,21 +280,58 @@ if __name__ == "__main__":
                     if status_data not in st.session_state.success_results and status_data["status"]=="SUCCESS" :
                         st.session_state.success_results.append(status_data)
 
-            col1, col2 = st.columns(2)
-            with col1:
+            col111, col222 = st.columns(2)
+            with col111:
                 st.info(f"대기중인 작업: {len(st.session_state.pending_results)}")
                 with st.container(border=True, height=500):
                     for p in st.session_state.pending_results:
                         st.warning(p)
-            with col2:
+            with col222:
                 st.info(f"성공한 작업: {len(st.session_state.success_results)}")
                 with st.container(border=True, height=500):
                     for s in st.session_state.success_results:
                         st.success(s)
-    
-    with col4:
-        st.subheader(":green[Postgres 데이터 Insert]")
+
+    with col2:
+        st.subheader(":green[Postgres 데이터 저장]")
         st.info("Pickle 데이터를 RDB에 저장")
+
+        with st.expander("Create Table"):
+            table_name = st.text_input("테이블명 입력(프로젝트명과 동일하게)", placeholder="예: my_table", value="프로젝트명")
+
+            if st.button("🚀 테이블 생성"):
+                if table_name.strip() == "":
+                    st.error("테이블명을 입력하세요.")
+                else:
+                    # FastAPI 요청 payload 생성
+                    payload = {"table_name": table_name, "columns": col_schema}
+
+                    try:
+                        res = requests.post(f"{FASTAPI_BASEURL}/create_tables", json=payload)
+
+                        if res.status_code == 200:
+                            st.success(res.json().get("message"))
+                        else:
+                            st.error(f"오류: {res.text}")
+
+                    except Exception as e:
+                        st.error(f"API 호출 중 오류: {str(e)}")
+
+            if st.button("🔍 테이블 확인"):
+                try:
+                    res = requests.get(f"{FASTAPI_BASEURL}/tables")
+                    if res.status_code == 200:
+                        tables = res.json().get("tables", [])
+
+                        if f"{SCHEMA_NAME}.{table_name}" not in tables:
+                            st.info(f"{SCHEMA_NAME}.{table_name} 테이블이 없습니다.")
+                        else:
+                            st.info(f"테이블 {SCHEMA_NAME}.{table_name}이 잘 생성되었습니다..")
+                    else:
+                        st.error(f"오류: {res.text}")
+
+                except Exception as e:
+                    st.error(f"API 호출 중 오류: {str(e)}")
 
         with st.expander("Data Insert"):
 
@@ -362,14 +339,15 @@ if __name__ == "__main__":
             # 💠 1) 피클 파일에서 DB로 데이터 삽입
             # -----------------------------
             table_name = st.text_input("테이블 이름", value="프로젝트명")
-            pickle_folder = st.text_input("피클 폴더 경로", value="./docs/parsed/프로젝트명")
+            project_name = st.text_input("프로젝트명", value="PDF 저장 최하위 폴더명")
+            pickle_folder = f"{config.PICKLE_ABS_PATH}{project_name}"
             submitted = st.button("삽입 실행")
-            with st.spinner("Processing..."):
-                if submitted:
+            if submitted:
+                with st.spinner("Processing..."):
                     try:
                         response = requests.post(
                             f"{FASTAPI_BASEURL}/insert_from_pickle",
-                            data={"table_name": table_name, "pickle_path": pickle_folder}
+                            data={"table_name": table_name, "pickle_folder": pickle_folder}
                             )
                         if response.status_code == 200:
                             st.success(response.json().get("message"))
@@ -378,17 +356,16 @@ if __name__ == "__main__":
                     except Exception as e:
                         st.error(f"서버 요청 중 오류 발생: {e}")
 
-
-        with st.expander("결과 확인(Hashed FilePath 조회)"):
+        with st.expander("결과 확인(Hashed FileContent 조회)"):
 
             table_name = st.text_input("Table Name", value="프로젝트명")
             if st.button("조회 실행"):
                 if not table_name:
-                    st.error("table_name과 hashed_filepath를 모두 입력하세요.")
+                    st.error("table_name과 hashed_file_content를 모두 입력하세요.")
                 else:
                     with st.spinner("API 호출 중..."):
                         try:
-                            url = f"{FASTAPI_BASEURL}/unique-filepath/{table_name}"
+                            url = f"{FASTAPI_BASEURL}/unique-hashed-content/{table_name}"
                             response = requests.get(url)
 
                             if response.status_code != 200:
@@ -407,12 +384,28 @@ if __name__ == "__main__":
                             st.error(f"API 호출 중 오류 발생: {e}")
             st.session_state.hashed_filepath
 
-    with col5:
-        st.subheader(":blue[Elastic Indexing]")
+    with col3:
+        st.subheader(":blue[ElasticSearch Indexing]")
         st.info("RDB 데이터를 Elastic 인덱싱")
-        with st.expander("1. 문서 색인"):
 
-            st.session_state.hashed_filepath
+        with st.expander("1.인덱스 생성"):
+            with st.form("index-form"):
+                index_name = st.text_input("**Index Name**", key="index_name_01", placeholder="예: 프로젝트명")
+                payload = {"index_name": index_name,}
+
+                st_create_index = st.form_submit_button("🚀 인덱스 생성 요청")
+                if st_create_index:
+                    try:
+                        res = requests.post(f"{FASTAPI_BASEURL}/es/indices", json=payload)
+                        if res.status_code == 200:
+                            st.success(res.json())
+                        else:
+                            st.error(f"오류: {res.text}")
+
+                    except Exception as e:
+                        st.error(f"API 호출 중 오류: {str(e)}")
+
+        with st.expander("2. 문서 색인"):
             with st.form("index_form"):
                 # 입력 필드
                 table_name = st.text_input("**Table Name(=index_name)**", key="index_table_name", placeholder="예: 프로젝트명")
@@ -421,72 +414,25 @@ if __name__ == "__main__":
                 submit_index = st.form_submit_button("🚀 문서 색인 요청")
 
                 if submit_index:
-                    for hashed_filepath in st.session_state.hashed_filepath:
-                        if not table_name or not hashed_filepath:
-                            st.error("⚠️ Table Name과 Hashed Filepath를 모두 입력해주세요.")
-                        else:
-                            endpoint_url = f"{FASTAPI_BASEURL}/index/document"
-                            payload = {
-                                "index_name": table_name,
-                                "table_name": table_name,
-                                "hashed_filepath": hashed_filepath
-                            }
-                            
-                            st.info(f"요청 URL: **POST** `{endpoint_url}`")
-                            st.json(payload)
-                            
-                            try:
-                                # API 호출
-                                response = requests.post(endpoint_url, json=payload, timeout=10)
-                                
-                                # 결과 처리
-                                if response.status_code == 200:
-                                    st.success("✅ **색인 요청 성공!**")
-                                    st.json(response.json())
-                                else:
-                                    st.error(f"❌ **색인 요청 실패!** (Status Code: {response.status_code})")
-                                    try:
-                                        st.json(response.json())
-                                    except json.JSONDecodeError:
-                                        st.text(response.text)
-                                        
-                            except requests.exceptions.ConnectionError:
-                                st.error(f"🔌 **연결 오류:** API 서버 ({FASTAPI_BASEURL})에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.")
-                            except requests.exceptions.Timeout:
-                                st.error("⏳ **시간 초과 오류:** API 응답 시간이 초과되었습니다.")
-                            except Exception as e:
-                                st.exception(e)
-
-        with st.expander("2. 문서 조회 테스트"):
-            with st.form("get_form"):
-                # 입력 필드
-                index_name = st.text_input("**Index_Name**", key="ggg123", placeholder="프로젝트명")
-                hashed_filepath_get = st.text_input("**Hashed Filepath (ID)**", key="get_hashed_filepath", placeholder="예: 0a1b2c3d4e5f6g7h")
-                
-                # 폼 제출 버튼
-                submit_get = st.form_submit_button("🔍 문서 조회")
-
-            if submit_get:
-                if not hashed_filepath_get:
-                    st.error("⚠️ Hashed Filepath를 입력해주세요.")
-                else:
-                    endpoint_url = f"{FASTAPI_BASEURL}/document/{index_name}/{hashed_filepath_get}"
+                    endpoint_url = f"{FASTAPI_BASEURL}/es/bulk-index"
+                    payload = {
+                        "schema_table_name": f"{SCHEMA_NAME}.{table_name}",
+                        "index_name": table_name,
+                        }
                     
-                    st.info(f"요청 URL: **GET** `{endpoint_url}`")
-                    
+                    st.info(f"요청 URL: **POST** `{endpoint_url}`")
+                    st.json(payload)
+                            
                     try:
                         # API 호출
-                        response = requests.get(endpoint_url, timeout=10)
+                        response = requests.post(endpoint_url, json=payload, timeout=10)
                         
                         # 결과 처리
                         if response.status_code == 200:
-                            st.success(f"✅ **문서 조회 성공! - {len(response.json())}**")
-                            st.json(response.json())
-                        elif response.status_code == 404:
-                            st.warning("⚠️ **문서를 찾을 수 없음** (Status Code: 404)")
+                            st.success("✅ **색인 요청 성공!**")
                             st.json(response.json())
                         else:
-                            st.error(f"❌ **문서 조회 실패!** (Status Code: {response.status_code})")
+                            st.error(f"❌ **색인 요청 실패!** (Status Code: {response.status_code})")
                             try:
                                 st.json(response.json())
                             except json.JSONDecodeError:
@@ -505,52 +451,38 @@ if __name__ == "__main__":
                 index_name = st.text_input("**Index_Name**", key="index_name", placeholder="프로젝트명")
                 query_text = st.text_area("**검색 쿼리 (query_text)**", key="search_query_text", height=100, placeholder="검색할 내용을 입력하세요")
                 
-                # 옵션 필드: size 및 min_score
+                # 옵션 필드: size
                 col1, col2 = st.columns(2)
                 with col1:
                     size = st.number_input("**반환할 문서 개수 (size)**", min_value=1, max_value=50, value=5, step=1, key="search_size")
                 with col2:
-                    # 0.0을 포함한 실수 입력 가능
-                    min_score = st.text_input("**최소 점수 (min_score)**", value="0.5", key="search_min_score")
+                    pass
                 
                 # 폼 제출 버튼
                 submit_search = st.form_submit_button("🔍 문서 검색 실행")
 
             if submit_search:
-                # min_score 입력값 유효성 검사 및 float 변환
-                try:
-                    min_score_float = float(min_score)
-                except ValueError:
-                    st.error("⚠️ 최소 점수(min_score)는 유효한 숫자로 입력해야 합니다.")
-                    st.stop()
                     
                 if not query_text:
                     st.error("⚠️ 검색 쿼리(query_text)를 입력해주세요. 이 필드는 필수입니다.")
-                    # 백엔드 로직에 따라 query_embedding이 제공되면 query_text가 없어도 되지만,
-                    # UI에서는 사용자 편의상 query_text 입력을 기본으로 유도합니다.
+
                 else:
-                    endpoint_url = f"{FASTAPI_BASEURL}/search"
+                    endpoint_url = f"{FASTAPI_BASEURL}/es/hybrid-search"
                     payload = {
-                        # UI는 query_text만 입력받고, query_embedding은 백엔드가 생성하도록 요청
                         "index_name": index_name,
-                        "query_text": query_text,
-                        "size": size,
-                        "min_score": min_score_float
+                        "query": query_text,
+                        "size": int(size),
                     }
-                    
-                    st.info(f"요청 URL: **POST** `{endpoint_url}`")
-                    st.json(payload)
-                    
                     try:
                         # API 호출
-                        response = requests.post(endpoint_url, json=payload, timeout=20) # 검색은 시간이 더 걸릴 수 있으므로 Timeout 증가
+                        response = requests.post(endpoint_url, json=payload, timeout=20) 
                         
                         # 결과 처리
                         if response.status_code == 200:
-                            st.success("✅ **검색 요청 성공!**")
                             response_data = response.json()
-                            st.markdown(f"**검색 유형:** `{response_data.get('query_type')}` | **총 결과 개수:** `{response_data.get('total_hits')}`")
-                            st.json(response_data.get("results"))
+                            st.success(f"✅ **검색 요청 성공!** - {len(response_data.get("hits"))}개")
+                            with st.container(height=300, border=True):
+                                st.info(response_data)
                         else:
                             st.error(f"❌ **검색 요청 실패!** (Status Code: {response.status_code})")
                             try:

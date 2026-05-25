@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+import os
 import json
 import pickle
 import psycopg2
@@ -106,11 +106,6 @@ class PostgresPipeline:
             conn = self._get_db_connection()
             conn.autocommit = True  # 중요 (lock/transaction 문제 방지)
 
-            # query = sql.SQL(
-            #     "DROP TABLE IF EXISTS {} CASCADE"
-            # ).format(
-            #     self._table_identifier(table_name)
-            # )
             query = sql.SQL("DROP TABLE IF EXISTS {}.{} CASCADE").format(
                 sql.Identifier(self.schema_name),
                 sql.Identifier(table_name)
@@ -405,6 +400,15 @@ class PostgresPipeline:
             if conn:
                 conn.close()
                 logger.info("데이터베이스 연결 종료")
+            
+            # pickle 파일 삭제
+            try:
+                if os.path.exists(pickle_path):
+                    os.remove(pickle_path)
+                    logger.info(f"PICKLE FILE DELETE: {pickle_path}")
+
+            except Exception as file_error:
+                logger.error(f"pickle 파일 삭제 실패: {file_error}")
 
     def select_all_data(self, table_name: str, limit: Optional[int] = 10, order_by: str = "id"):
         """지정된 테이블의 10게 데이터를 조회합니다."""

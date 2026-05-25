@@ -146,7 +146,7 @@ class ElasticsearchIndexer:
 
     def fetch_data(
         self,
-        table_name: str,
+        schema_table_name: str,
         batch_size: int = 100
         ):
         """
@@ -154,6 +154,7 @@ class ElasticsearchIndexer:
         """
 
         conn = self._get_pg_connection()
+        conn.autocommit = True  # 중요 (lock/transaction 문제 방지)
 
         query = f"""
             SELECT
@@ -165,7 +166,7 @@ class ElasticsearchIndexer:
                 sparse_embeddings,
                 created_at,
                 updated_at
-            FROM {table_name}
+            FROM {schema_table_name}
         """
 
         try:
@@ -253,16 +254,32 @@ class ElasticsearchIndexer:
     # Bulk Index
     # =========================================================
 
-    def bulk_index(self, table_name:str, index_name:str, batch_size: int = 200, chunk_size: int = 200):
+    def bulk_index(
+        self,
+        schema_table_name: str,
+        index_name: str,
+        batch_size: int = 200,
+        chunk_size: int = 200
+        ) -> dict:
         """
         PostgreSQL → Elasticsearch Bulk Index
+
+        Returns:
+            dict: 인덱싱 결과 정보
         """
 
         total_indexed = 0
+        total_failed = 0
 
-        for rows in self.fetch_data(table_name=table_name, batch_size=batch_size):
+        for rows in self.fetch_data(
+            schema_table_name=schema_table_name,
+            batch_size=batch_size
+        ):
 
-            actions = self.generate_actions(index_name=index_name, rows=rows)
+            actions = self.generate_actions(
+                index_name=index_name,
+                rows=rows
+            )
 
             success, failed = helpers.bulk(
                 self.es,
@@ -272,10 +289,19 @@ class ElasticsearchIndexer:
             )
 
             total_indexed += success
+            total_failed += len(failed) if isinstance(failed, list) else failed
 
             logger.info(f"Indexed: {total_indexed}")
 
         logger.info("Bulk indexing completed")
+
+        return {
+            "status": "success",
+            "index_name": index_name,
+            "table_name": schema_table_name,
+            "indexed_count": total_indexed,
+            "failed_count": total_failed
+        }
 
     # =========================================================
     # Hybrid Search
@@ -290,15 +316,11 @@ class ElasticsearchIndexer:
         query: str,
         size: int = 10
         ) -> Dict[str, Any]:
-        """
-        BM25 + Dense Vector Hybrid Search
-        """
 
         try:
 
-            # =====================================================
-            # Query Embedding
-            # =====================================================
+            if size <= 0:
+                raise ValueError("size must be > 0")
 
             embedding_result = self.embed_model.encode(
                 query,
@@ -312,13 +334,12 @@ class ElasticsearchIndexer:
             if query_vector is None:
                 raise ValueError("dense_vecs is None")
 
-            # numpy.ndarray 대응
             if hasattr(query_vector, "tolist"):
                 query_vector = query_vector.tolist()
 
-            # =====================================================
-            # Elasticsearch Query
-            # =====================================================
+            # 2차원 배열 대응
+            if isinstance(query_vector[0], list):
+                query_vector = query_vector[0]
 
             search_body = {
                 "size": size,
@@ -328,10 +349,14 @@ class ElasticsearchIndexer:
                         "should": [
                             {
                                 "match": {
-                                    "page_content": query
+                                    "page_content": {
+                                        "query": query,
+                                        "boost": 0.3
+                                    }
                                 }
                             }
-                        ]
+                        ],
+                        "minimum_should_match": 1
                     }
                 },
 
@@ -339,37 +364,37 @@ class ElasticsearchIndexer:
                     "field": "dense_embeddings",
                     "query_vector": query_vector,
                     "k": size,
-                    "num_candidates": 100
+                    "num_candidates": max(size * 5, 100),
+                    "boost": 0.7
                 }
             }
-
-            # =====================================================
-            # Search
-            # =====================================================
 
             response = self.es.search(
                 index=index_name,
                 body=search_body
             )
 
+            hits = response.get("hits", {}).get("hits", [])
+
             logger.info(
                 f"Hybrid search completed | "
                 f"index={index_name} | "
                 f"query='{query}' | "
-                f"hits={len(response['hits']['hits'])}"
+                f"hits={len(hits)}"
             )
 
-            return response
+            return {
+                "total": len(hits),
+                "hits": hits
+            }
 
         except Exception as e:
-
             logger.exception(
                 f"Hybrid search failed | "
                 f"index={index_name} | "
                 f"query='{query}' | "
                 f"error={str(e)}"
             )
-
             raise
 
     # =========================================================

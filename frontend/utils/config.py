@@ -5,6 +5,11 @@ class BaseConfig:
     """공통 설정"""
     ENV: str = os.getenv("ENV", "production")
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+
+    FASTAPI_BASEURL: str = os.getenv("FASTAPI_BASEURL", "http://localhost:8001")
+    SCHEMA_NAME: str = os.getenv("SCHEMA_NAME", "test_01")
+    PICKLE_ABS_PATH : str = os.getenv("SCHEMA_NAME", "D:/auto_vectordb/backend/docs/parsed/")
+
     REDIS_BROKER_URL: str = os.getenv("BROKER_URL", "redis://redis:6379/0")
     REDIS_BACKEND_URL: str = os.getenv("RESULT_BACKEND", "redis://redis:6379/1")
     REDIS_PUBSUB_URL: str = os.getenv("RESULT_BACKEND", "redis://redis:6379/2")

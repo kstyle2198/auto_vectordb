@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, HTTPException, Query
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, HTTPException, Query, Path
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 from process.postgres import PostgresPipeline
 
@@ -28,7 +28,7 @@ def list_files_recursive(folder_path: str):
 # -----------------------------
 # 💠 1) 테이블명 조회
 # -----------------------------
-@pg_api.get("/tables", summary="모든 테이블 조회", tags=["Postgres"])
+@pg_api.get("/tables", summary="모든 스키마명.테이블 조회", tags=["Postgres"])
 def get_all_tables():
     try:
         tables = pg.get_all_tables()
@@ -48,8 +48,8 @@ class ColumnConfig(BaseModel):
 columns_data = [ColumnConfig(**item) for item in pg_schema]
 
 class CreateTableRequest(BaseModel):
-    table_name: str
-    columns: List[ColumnConfig] = columns_data
+    table_name: str = Field(..., description="생성할 테이블 이름 (schema 제외, 순수 테이블명)")
+    columns: List[ColumnConfig] = Field(default_factory=lambda: columns_data, description="테이블 컬럼 설정 리스트 (ColumnConfig 정의 기반)")
 
 
 @pg_api.post("/create_tables", summary="테이블 생성", tags=["Postgres"])
@@ -93,8 +93,8 @@ def delete_table(schema_table_name: str):
 # -----------------------------
 @pg_api.post("/insert_from_pickle", summary="피클 파일에서 DB로 데이터 삽입", tags=["Postgres"])
 async def insert_from_pickle(
-    table_name: str = Form(..., description="입력할 테이블명"),
-    pickle_folder: str = Form(..., description="피클 파일 저장 폴더명")
+    table_name: str = Form(..., description="입력할 테이블명 (스키마명 제외)"),
+    pickle_folder: str = Form(..., description="피클 파일 저장 폴더명(./docs/parsed/~~)")
     ):
     """
     서버 내 pickle 파일 경로를 받아 데이터를 DB에 insert
@@ -118,7 +118,7 @@ async def insert_from_pickle(
 
 @pg_api.get("/select_all", summary="테이블 데이터 조회", tags=["Postgres"])
 async def select_all(
-    table_name: str = Query(..., description="조회할 테이블명"),
+    table_name: str = Query(..., description="조회할 테이블명(스키마명 제외)"),
     limit: Optional[int] = Query(10, description="조회할 데이터 수 제한"),
     order_by: str = Query("id", description="정렬할 컬럼명")
     ):
@@ -139,7 +139,7 @@ async def select_all(
     
 
 @pg_api.get("/unique-hashed-content/{table_name}", tags=["Postgres"])
-def get_unique_hashed_filepath(table_name: str):
+def get_unique_hashed_filepath(table_name: str = Path(..., description="조회할 테이블명(스키마명 제외)")):
     """
     hashed_filepath 고유값 리스트 조회 API
     """
