@@ -96,8 +96,7 @@ class PostgresPipeline:
             return []
 
         finally:
-            if conn:
-                conn.close()
+            release_pg_connection(conn)
 
     def drop_table(self, table_name: str):
         conn = None
@@ -125,8 +124,8 @@ class PostgresPipeline:
                 conn.rollback()
 
         finally:
-            if conn:
-                conn.close()
+            release_pg_connection(conn)
+
 
     def create_table(self, table_name: str, columns_config: list):
         conn = None
@@ -227,8 +226,8 @@ class PostgresPipeline:
                 conn.rollback()
 
         finally:
-            if conn:
-                conn.close()
+            release_pg_connection(conn)
+
 
     def _reform_csv_data(self, csv_path: str):
         """엑셀 데이터를 재구성합니다."""
@@ -302,11 +301,8 @@ class PostgresPipeline:
                 conn.rollback()
         finally:
             # 리소스 정리
-            if cur:
-                cur.close()
-            if conn:
-                conn.close()
-                logger.info("데이터베이스 연결 종료")
+            release_pg_connection(conn)
+
 
     def _make_jsonable(self, obj):
         """numpy/scipy 타입을 JSON 직렬화 가능하게 변환"""
@@ -395,11 +391,7 @@ class PostgresPipeline:
                 conn.rollback()
         finally:
             # 리소스 정리
-            if cur:
-                cur.close()
-            if conn:
-                conn.close()
-                logger.info("데이터베이스 연결 종료")
+            release_pg_connection(conn)
             
             # pickle 파일 삭제
             try:
@@ -435,8 +427,8 @@ class PostgresPipeline:
             logger.error("오류 발생:", error)
             return []
         finally:
-            if conn is not None:
-                conn.close()
+            release_pg_connection(conn)
+
     
     def get_unique_hashed_content(self, table_name):
         """
@@ -457,8 +449,8 @@ class PostgresPipeline:
             print("Error:", e)
             return None
         finally:
-            if conn:
-                conn.close()
+            release_pg_connection(conn)
+
 
     def delete_data_by_id(self, table_name: str, id_column: str, record_id: int):
         """특정 ID를 가진 레코드를 테이블에서 삭제합니다."""
@@ -491,8 +483,7 @@ class PostgresPipeline:
             if conn is not None:
                 conn.rollback()
         finally:
-            if conn is not None:
-                conn.close()
+            release_pg_connection(conn)
         
         return deleted_rows
     

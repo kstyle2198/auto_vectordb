@@ -454,7 +454,6 @@ if __name__ == "__main__":
                     try:
                         # API 호출
                         response = requests.post(endpoint_url, json=payload, timeout=10)
-                        
                         # 결과 처리
                         if response.status_code == 200:
                             st.success("✅ **색인 요청 성공!**")
