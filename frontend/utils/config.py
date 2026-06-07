@@ -7,7 +7,7 @@ class BaseConfig:
     DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
 
     FASTAPI_BASEURL: str = os.getenv("FASTAPI_BASEURL", "http://localhost:8001")
-    SCHEMA_NAME: str = os.getenv("SCHEMA_NAME", "test_01")
+    SCHEMA_NAME: str = os.getenv("SCHEMA_NAME", "group_01")
     PICKLE_ABS_PATH : str = os.getenv("SCHEMA_NAME", "D:/auto_vectordb/backend/docs/parsed/")
 
     REDIS_BROKER_URL: str = os.getenv("BROKER_URL", "redis://redis:6379/0")

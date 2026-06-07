@@ -143,7 +143,7 @@ def list_files_recursive(folder_path: str):
 
         for file in files:
 
-            if file.endswith((".pickle", ".pkl")):
+            if file.endswith((".pickle", ".pkl", "pdf")):
 
                 yield os.path.join(
                     root,
@@ -157,33 +157,34 @@ def count_files(folder_path: str) -> int:
         count += len(files)
     return count
 
-def upload_file_in_chunks(local_base_path:str, local_path:str):
-    chunk_size = 10 * 1024 * 1024   # 10MB
-    local_filename = os.path.basename(local_path)
-    file_size = os.path.getsize(local_path)
-    total_chunks = (file_size + chunk_size - 1) // chunk_size
 
-    folder_path = os.path.dirname(local_path).replace("\\", "/") # 맨 끝 파일명 제외한 상위 경로
-    delted_path = os.path.dirname(local_base_path).replace("\\", "/") # 폴더 경로에서 맨끝 폴더 제외 --> 서버 저장시 제거할 경로명
-    server_path = f"{folder_path.replace('\\', '/').replace(delted_path, '')}"
+def upload_file(local_base_path: str, local_path: str):
+    file_path = Path(local_path)
+
+    # 프로젝트 폴더 기준 상대 경로
+    server_path = local_base_path.split("/")[-1]
 
     with open(local_path, "rb") as f:
-        for chunk_index in range(total_chunks):
-            chunk = f.read(chunk_size)
 
-            files = {"file": ("chunk", chunk)}
-            data = {
-                "filename": local_filename,
-                "chunk_index": int(chunk_index),
-                "total_chunks": int(total_chunks),
-                "server_path": server_path,
-                }
-            try:
-                res = requests.post(f"{FASTAPI_BASEURL}/upload_chunk", files=files, data=data)
-                logger.info(f"Chunked file is Uploaded Successfully - {local_path}")
-            except Exception as e:
-                logger.error(e)
+        files = {
+            "file": (
+                file_path.name,
+                f,
+                "application/octet-stream",
+            )
+        }
 
+        data = {"local_path": local_path, "server_path": server_path,}
+
+        response = requests.post(
+            f"{FASTAPI_BASEURL}/upload",
+            files=files,
+            data=data,
+            timeout=300,
+        )
+        response.raise_for_status()
+
+        return response.json()
 
 col_schema = [
     {'name': 'id', 'type': 'VARCHAR(300) NOT NULL'}, 
@@ -205,6 +206,7 @@ if __name__ == "__main__":
 
     st.title(":blue[Auto VectorDB]")
     st.page_link(label="FastAPI Docs", page="http://localhost:8001/docs")
+    st.info(f"PROJECT_NAME: {st.session_state.project_name}")
     st.markdown("---")
 
     col1, col2, col3 = st.columns(3)
@@ -216,37 +218,68 @@ if __name__ == "__main__":
         local_base_path_sample = local_base_path_sample.replace("\\", "/")
 
         with st.expander("File Upload"):
-            local_base_path = st.text_input("로컬 프로젝트 폴더 경로를 입력하세요", value=local_base_path_sample)
-            local_base_path = local_base_path.replace("\\", "/")
-            st.session_state.project_name = local_base_path.split("/")[-1]   # 맨 마지막 폴더명이 프로젝트명
-        
-            if st.button("대용량 청킹 파일 전송"):
-                if not os.path.exists(local_base_path):
-                    st.error("❌ 경로가 존재하지 않습니다.")
-                    st.stop()
+            local_base_path = st.text_input(
+        "로컬 프로젝트 폴더 경로를 입력하세요",
+        value=local_base_path_sample,
+        )
 
-                total_files = count_files(local_base_path)
-                if total_files == 0:
-                    st.warning("📁 전송할 파일이 없습니다.")
-                    st.stop()
+        local_base_path = local_base_path.replace("\\", "/")
 
-                progress_bar = st.progress(0)
-                status = st.empty()
+        st.session_state.project_name = Path(local_base_path).name
 
-                files = list_files_recursive(local_base_path)
+        if st.button("파일 업로드"):
 
-                for idx, local_path in enumerate(files, start=1):
-                    upload_file_in_chunks(local_base_path=local_base_path, local_path=local_path)
+            if not os.path.exists(local_base_path):
+                st.error("❌ 경로가 존재하지 않습니다.")
+                st.stop()
 
-                    progress = idx / total_files
-                    progress_bar.progress(progress)
-                    status.write(f"({idx}/{total_files}) 업로드 중: {local_path}")
+            files = list_files_recursive(local_base_path)
 
-                st.success("🎉 모든 파일 업로드 완료!")
+            if not files:
+                st.warning("📁 전송할 파일이 없습니다.")
+                st.stop()
+
+            total_files = count_files(local_base_path)
+
+            progress_bar = st.progress(0.0)
+            status = st.empty()
+            result_area = st.empty()
+
+            success_count = 0
+            fail_count = 0
+
+            for idx, local_path in enumerate(files, start=1):
+
+                try:
+                    upload_file(local_base_path=local_base_path, local_path=local_path,)
+
+                    success_count += 1
+
+                except Exception as e:
+                    fail_count += 1
+
+                    st.error(
+                        f"업로드 실패\n"
+                        f"파일: {local_path}\n"
+                        f"오류: {str(e)}"
+                    )
+
+                progress = idx / total_files
+                progress_bar.progress(progress)
+
+                status.write(
+                    f"({idx}/{total_files}) 업로드 중: "
+                    f"{Path(local_path).name}"
+                )
+
+            result_area.success(f"🎉 업로드 완료 " f"(성공: {success_count}, 실패: {fail_count})")
+            st.session_state["wererww"] = (f"./docs/uploaded/{st.session_state.project_name}")
+            st.session_state["tablename_key"] = st.session_state.project_name
+            st.session_state["index_name_01"] = st.session_state.project_name
 
         with st.expander("Background Parsing"):
 
-            folder_path = st.text_input("폴더 경로를 입력하세요", f"./docs/uploaded/{st.session_state.project_name}", key="wererww")
+            folder_path = st.text_input("폴더 경로를 입력하세요",  placeholder=f"./docs/uploaded/프로젝트명", key="wererww")
 
             if st.button("Task ID 초기화"):
                 st.session_state.task_ids = []
@@ -254,9 +287,8 @@ if __name__ == "__main__":
                 st.session_state.success_results = []
 
             if st.button("Background 처리 시작"):
-                
-                for file in requests.get(f"{FASTAPI_BASEURL}/list-files-stream", params={"folder_path": folder_path}, stream=True):
-                    file = file.decode("utf-8")
+                reponse = requests.get(f"{FASTAPI_BASEURL}/list-files-stream", params={"folder_path": folder_path}, stream=True)
+                for file in reponse.iter_lines(decode_unicode=True):
                     file = json.loads(file)
                     st.info(f"target_file: {file}")
                     pdf_path = file["pdf_path"]
@@ -287,16 +319,14 @@ if __name__ == "__main__":
                         st.warning(p)
             with col222:
                 st.info(f"성공한 작업: {len(st.session_state.success_results)}")
-                with st.container(border=True, height=500):
-                    for s in st.session_state.success_results:
-                        st.success(s)
+
 
     with col2:
         st.subheader(":green[Postgres 데이터 저장]")
         st.info("Pickle 데이터를 RDB에 저장")
 
         with st.expander("Create Table"):
-            table_name = st.text_input("테이블명 입력(프로젝트명과 동일하게)", placeholder="예: my_table", value="프로젝트명")
+            table_name = st.text_input("테이블명 입력(프로젝트명과 동일하게)", placeholder="예: my_table", key="tablename_key")
 
             if st.button("🚀 테이블 생성"):
                 if table_name.strip() == "":
@@ -337,7 +367,7 @@ if __name__ == "__main__":
             # -----------------------------
             # 💠 1) 피클 파일에서 DB로 데이터 삽입
             # -----------------------------
-            table_name = st.text_input("테이블 이름", value="프로젝트명")
+            # table_name = st.text_input("테이블 이름", value="프로젝트명")
             project_name = st.text_input("프로젝트명", value="PDF 저장 최하위 폴더명")
             pickle_folder = f"{config.PICKLE_ABS_PATH}{project_name}"
             submitted = st.button("삽입 실행")
@@ -357,7 +387,7 @@ if __name__ == "__main__":
 
         with st.expander("결과 확인(Hashed FileContent 조회)"):
 
-            table_name = st.text_input("Table Name", value="프로젝트명")
+            # table_name = st.text_input("Table Name", value="프로젝트명")
             if st.button("조회 실행"):
                 if not table_name:
                     st.error("table_name과 hashed_file_content를 모두 입력하세요.")
@@ -376,7 +406,6 @@ if __name__ == "__main__":
                                     st.success("조회 성공!")
                                     st.write(f"총 개수: **{data.get('count')}**")
                                     st.session_state.hashed_filepath = data.get("hashed_filepaths")
-                                    # st.json(data.get("hashed_filepaths"))
                                 else:
                                     st.error(f"⚠️ 오류: {data.get('message')}")
                         except Exception as e:
@@ -397,7 +426,7 @@ if __name__ == "__main__":
                     try:
                         res = requests.post(f"{FASTAPI_BASEURL}/es/indices", json=payload)
                         if res.status_code == 200:
-                            st.success(res.json())
+                            st.success("SUCCESS")
                         else:
                             st.error(f"오류: {res.text}")
 
@@ -407,7 +436,7 @@ if __name__ == "__main__":
         with st.expander("2. 문서 색인"):
             with st.form("index_form"):
                 # 입력 필드
-                table_name = st.text_input("**Table Name(=index_name)**", key="index_table_name", placeholder="예: 프로젝트명")
+                # table_name = st.text_input("**Table Name(=index_name)**", key="index_table_name", placeholder="예: 프로젝트명")
                 
                 # 폼 제출 버튼
                 submit_index = st.form_submit_button("🚀 문서 색인 요청")
@@ -415,8 +444,8 @@ if __name__ == "__main__":
                 if submit_index:
                     endpoint_url = f"{FASTAPI_BASEURL}/es/bulk-index"
                     payload = {
-                        "schema_table_name": f"{SCHEMA_NAME}.{table_name}",
-                        "index_name": table_name,
+                        "schema_table_name": f"{SCHEMA_NAME}.{index_name}",
+                        "index_name": index_name,
                         }
                     
                     st.info(f"요청 URL: **POST** `{endpoint_url}`")
@@ -447,7 +476,7 @@ if __name__ == "__main__":
         with st.expander("3. 문서 검색 테스트"):
             with st.form("search_form"):
                 # 입력 필드: 쿼리 텍스트
-                index_name = st.text_input("**Index_Name**", key="index_name", placeholder="프로젝트명")
+                # index_name = st.text_input("**Index_Name**", key="index_name", placeholder="프로젝트명")
                 query_text = st.text_area("**검색 쿼리 (query_text)**", key="search_query_text", height=100, placeholder="검색할 내용을 입력하세요")
                 
                 # 옵션 필드: size

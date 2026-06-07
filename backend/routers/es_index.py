@@ -40,16 +40,16 @@ def get_es_indexer():
 # API Endpoints
 # =========================================================
 
-@es_api.get("/indices", summary="모든 Elasticsearch 인덱스 조회")
+@es_api.get("/indices", summary="Elasticsearch 인덱스 조회(.으로 시작하는 디폴트 인덱스는 제외)")
 def get_all_indices(es_indexer: ElasticsearchIndexer = Depends(get_es_indexer)):
 
     try:
 
         indices = es_indexer.get_all_index_names()
-
+        custom_indices = [i for i in indices if not i.startswith(".")] # .으로 시작하는 디폴트 인덱스명은 제외
         return {
-            "count": len(indices),
-            "indices": indices
+            "count": len(custom_indices),
+            "indices": custom_indices  
         }
 
     except Exception as e:
